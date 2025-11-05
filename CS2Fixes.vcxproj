@@ -73,7 +73,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>cs2fixes</TargetName>
-    <LibraryPath>sdk\lib\public\win64;vendor/funchook/lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <LibraryPath>sdk\lib\public\win64;vendor\funchook\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <OutDir>$(SolutionDir)/package/addons/cs2fixes/bin/win64/</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -209,6 +209,7 @@
     <ClCompile Include="src\playermanager.cpp" />
     <ClCompile Include="src\user_preferences.cpp" />
     <ClCompile Include="src\votemanager.cpp" />
+    <ClCompile Include="src\zombiemod.cpp" />
     <ClCompile Include="src\zombiereborn.cpp" />
     <ClCompile Include="src\entitylistener.cpp" />
     <ClCompile Include="src\leader.cpp" />
@@ -285,6 +286,7 @@
     <ClInclude Include="src\votemanager.h" />
     <ClInclude Include="src\map_votes.h" />
     <ClInclude Include="src\user_preferences.h" />
+    <ClInclude Include="src\zombiemod.h" />
     <ClInclude Include="src\zombiereborn.h" />
     <ClInclude Include="src\entitylistener.h" />
     <ClInclude Include="src\leader.h" />

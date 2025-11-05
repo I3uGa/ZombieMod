@@ -1,6 +1,6 @@
-# CS2Fixes
+# ZombieMod
 
-CS2Fixes is a Metamod plugin with fixes and features aimed but not limited to zombie escape. This project also serves as a good example and help for source2mod and other developers.
+ZombieMod is a fork of CS2Fixes which is a Metamod plugin with fixes and features aimed but not limited to zombie escape. Instead of reinventing the wheel I'm building on the shoulders of giants and offering the first ZombieMod for CS2 as a module of CS2Fixes. Currently under development and not working yet.
 
 ## Installation
 
@@ -13,16 +13,14 @@ CS2Fixes is a Metamod plugin with fixes and features aimed but not limited to zo
 ## Fixes and Features
 You can find the documentation of the fixes and features [here](../../wiki/Home).
 
-## Why is this all one plugin? Why "CS2Fixes"?
+## Why add it to CS2Fixes and not a standalone plugin?
 
-Reimplementing all these features as standalone plugins would duplicate quite a lot of code between each. Metamod is not much more than a loader & hook manager, so many common modding features need a fair bit of boilerplate to work with. And since our primary goal is developing CS2Fixes for all zombie escape servers, there is not necessarily a drawback to distributing our work in this form at the moment.
-
-The CS2Fixes name comes from the CSSFixes and CSGOFixes projects, which were primarily aimed at low-level bug fixes and improvements for their respective games. Long term, we see this plugin slimming down and becoming more similar to them. Since as the CS2 modding scene matures, common things like an admin system and RTV become more feasible in source2mod or a similar modding platform.
+The guys at CS2Fixes have already done most of the hard work implementing a real, working CS2 mod with hooks and functions plus the various CS2 fixes included so if I were to make a second plugin people would need two, with a lot more overhead. This way, you can have everything at once. It'll keep the CS2Fixes part separate with an optional ZombieMod module to enable.
 
 ## Compilation
 
 ```
-git clone https://github.com/Source2ZE/CS2Fixes/ && cd CS2Fixes
+git clone https://github.com/JayCroghan/ZombieMod/ && cd ZombieMod
 git submodule update --init --recursive
 ```
 ### Docker (easiest)
