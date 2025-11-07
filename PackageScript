@@ -108,7 +108,6 @@ for task in MMSPlugin.binaries:
   builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'addons', MMSPlugin.metadata['name'], 'data'))
   configs_folder = builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'addons', MMSPlugin.metadata['name'], 'configs'))
   zr_folder = builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'addons', MMSPlugin.metadata['name'], 'configs', 'zr'))
-  zm_folder = builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'addons', MMSPlugin.metadata['name'], 'configs', 'zm'))
   ew_maps_folder = builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'addons', MMSPlugin.metadata['name'], 'configs', 'entwatch', 'maps'))
   cfg_folder = builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'cfg', MMSPlugin.metadata['name']))
   mapcfg_folder = builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'cfg', MMSPlugin.metadata['name'], 'maps'))
@@ -121,9 +120,6 @@ for task in MMSPlugin.binaries:
   builder.AddCopy(os.path.join('configs', 'zr', 'playerclass.jsonc.example'), zr_folder)
   builder.AddCopy(os.path.join('configs', 'zr', 'weapons.cfg.example'), zr_folder)
   builder.AddCopy(os.path.join('configs', 'zr', 'hitgroups.cfg.example'), zr_folder)
-  builder.AddCopy(os.path.join('configs', 'zm', 'playerclass.jsonc.example'), zm_folder)
-  builder.AddCopy(os.path.join('configs', 'zm', 'weapons.cfg.example'), zm_folder)
-  builder.AddCopy(os.path.join('configs', 'zm', 'hitgroups.cfg.example'), zm_folder)
   builder.AddCopy(os.path.join('configs', 'entwatch', 'maps', 'example_config.jsonc'), ew_maps_folder)
   builder.AddCopy(os.path.join('gamedata', 'cs2fixes.games.txt'), gamedata_folder)
 
@@ -140,6 +136,7 @@ for task in MMSPlugin.binaries:
 
   soundevents_folder = builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'soundevents'))
   builder.AddCopy(os.path.join('assets', 'soundevents', 'soundevents_zr.vsndevts_c'), soundevents_folder)
+  builder.AddCopy(os.path.join('assets', 'soundevents', 'soundevents_zm.vsndevts_c'), soundevents_folder)
 
   sounds_zr_folder = builder.AddFolder(os.path.join(packages[sdk_name].sdk_name, 'sounds', 'zr'))
   builder.AddCopy(os.path.join('assets', 'sounds', 'zr', 'fz_scream1.vsnd_c'), sounds_zr_folder)

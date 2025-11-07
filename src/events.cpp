@@ -34,6 +34,7 @@
 #include "recipientfilters.h"
 #include "votemanager.h"
 #include "zombiereborn.h"
+#include "zombiemod.h"
 
 #include "tier0/memdbgon.h"
 
@@ -114,6 +115,9 @@ GAME_EVENT_F(player_spawn)
 	if (g_cvarEnableZR.Get())
 		ZR_OnPlayerSpawn(pController);
 
+	if (g_cvarZMEnable.Get())
+		ZM_OnPlayerSpawn(pController);
+
 	if (pController->IsConnected())
 		pController->GetZEPlayer()->OnSpawn();
 
@@ -187,6 +191,9 @@ GAME_EVENT_F(player_death)
 {
 	if (g_cvarEnableZR.Get())
 		ZR_OnPlayerDeath(pEvent);
+	
+	if (g_cvarZMEnable.Get())
+		ZM_OnPlayerDeath(pEvent);
 
 	if (g_cvarEnableEntWatch.Get())
 		EW_PlayerDeath(pEvent);
@@ -217,6 +224,9 @@ GAME_EVENT_F(round_start)
 
 	if (g_cvarEnableZR.Get())
 		ZR_OnRoundStart(pEvent);
+
+	if (g_cvarZMEnable.Get())
+		ZM_OnRoundStart(pEvent);
 
 	if (g_cvarEnableLeader.Get())
 		Leader_OnRoundStart(pEvent);
@@ -301,12 +311,18 @@ GAME_EVENT_F(round_freeze_end)
 {
 	if (g_cvarEnableZR.Get())
 		ZR_OnRoundFreezeEnd(pEvent);
+
+	if (g_cvarZMEnable.Get())
+		ZM_OnRoundFreezeEnd(pEvent);
 }
 
 GAME_EVENT_F(round_time_warning)
 {
 	if (g_cvarEnableZR.Get())
 		ZR_OnRoundTimeWarning(pEvent);
+
+	if (g_cvarZMEnable.Get())
+		ZM_OnRoundTimeWarning(pEvent);
 }
 
 GAME_EVENT_F(bullet_impact)

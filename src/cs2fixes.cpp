@@ -538,6 +538,7 @@ bool CS2Fixes::Unload(char* error, size_t maxlen)
 
 void CS2Fixes::Hook_DispatchConCommand(ConCommandRef cmdHandle, const CCommandContext& ctx, const CCommand& args)
 {
+	Message("DispatchCommand");
 	VPROF_BUDGET("CS2Fixes::Hook_DispatchConCommand", "ConCommands");
 
 	if (!g_pEntitySystem)
@@ -901,6 +902,12 @@ void CS2Fixes::Hook_ClientCommand(CPlayerSlot slot, const CCommand& args)
 		ZR_Hook_ClientCommand_JoinTeam(slot, args);
 		RETURN_META(MRES_SUPERCEDE);
 	}
+
+	if (g_cvarZMEnable.Get() && slot != -1 && !V_strncmp(args.Arg(0), "jointeam", 8))
+	{
+		ZM_Hook_ClientCommand_JoinTeam(slot, args);
+		RETURN_META(MRES_SUPERCEDE);
+	}
 }
 
 void CS2Fixes::Hook_ClientSettingsChanged(CPlayerSlot slot)
@@ -944,6 +951,9 @@ void CS2Fixes::Hook_ClientPutInServer(CPlayerSlot slot, char const* pszName, int
 
 	if (g_cvarEnableZR.Get())
 		ZR_Hook_ClientPutInServer(slot, pszName, type, xuid);
+	
+	if (g_cvarZMEnable.Get())
+		ZM_Hook_ClientPutInServer(slot, pszName, type, xuid);
 }
 
 void CS2Fixes::Hook_ClientDisconnect(CPlayerSlot slot, ENetworkDisconnectionReason reason, const char* pszName, uint64 xuid, const char* pszNetworkID)
@@ -951,10 +961,21 @@ void CS2Fixes::Hook_ClientDisconnect(CPlayerSlot slot, ENetworkDisconnectionReas
 	Message("Hook_ClientDisconnect(%d, %d, \"%s\", %lli)\n", slot, reason, pszName, xuid);
 
 	CCSPlayerController* player = CCSPlayerController::FromSlot(slot);
-	if (player)
-		ZR_CheckTeamWinConditions(player->m_iTeamNum == CS_TEAM_T ? CS_TEAM_CT : CS_TEAM_T);
-	else if (!ZR_CheckTeamWinConditions(CS_TEAM_T)) // If we cant get team num, just check both
-		ZR_CheckTeamWinConditions(CS_TEAM_CT);
+	if (g_cvarEnableZR.Get())
+	{
+		if (player)
+			ZR_CheckTeamWinConditions(player->m_iTeamNum == CS_TEAM_T ? CS_TEAM_CT : CS_TEAM_T);
+		else if (!ZR_CheckTeamWinConditions(CS_TEAM_T)) // If we cant get team num, just check both
+			ZR_CheckTeamWinConditions(CS_TEAM_CT);
+	}
+
+	if (g_cvarZMEnable.Get())
+	{
+		if (player)
+			ZM_CheckTeamWinConditions(player->m_iTeamNum == CS_TEAM_T ? CS_TEAM_CT : CS_TEAM_T);
+		else if (!ZR_CheckTeamWinConditions(CS_TEAM_T)) // If we cant get team num, just check both
+			ZM_CheckTeamWinConditions(CS_TEAM_CT);
+	}
 
 	ZEPlayer* pPlayer = g_playerManager->GetPlayer(slot);
 
@@ -1110,6 +1131,9 @@ bool CS2Fixes::Hook_OnTakeDamage_Alive(CTakeDamageResult* pDamageResult)
 	CCSPlayerPawn* pPawn = META_IFACEPTR(CCSPlayerPawn);
 
 	if (g_cvarEnableZR.Get() && ZR_Hook_OnTakeDamage_Alive(pDamageResult->m_pOriginatingInfo, pPawn))
+		RETURN_META_VALUE(MRES_SUPERCEDE, false);
+
+	if (g_cvarZMEnable.Get() && ZM_Hook_OnTakeDamage_Alive(pDamageResult->m_pOriginatingInfo, pPawn))
 		RETURN_META_VALUE(MRES_SUPERCEDE, false);
 
 	// This is a shit place to be doing this, but player_death event is too late and there is no pre-hook alternative
@@ -1332,6 +1356,11 @@ void CS2Fixes::OnLevelInit(char const* pMapName,
 
 	if (g_cvarEnableZR.Get())
 		ZR_OnLevelInit();
+
+	if (g_cvarZMEnable.Get())
+	{
+		ZM_OnLevelInit();
+	}
 
 	CCSPlayer_ItemServices::ResetAwsProcessing();
 

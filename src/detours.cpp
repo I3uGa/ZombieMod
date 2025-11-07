@@ -51,6 +51,7 @@
 #include "serversideclient.h"
 #include "tier0/vprof.h"
 #include "zombiereborn.h"
+#include "zombiemod.h"
 
 #include "tier0/memdbgon.h"
 
@@ -153,6 +154,9 @@ int64 FASTCALL Detour_CBaseEntity_TakeDamageOld(CBaseEntity* pThis, CTakeDamageI
 
 	if (pResult->m_nDamageDealt > 0 && g_cvarEnableZR.Get() && pThis->IsPawn())
 		ZR_OnPlayerTakeDamage(reinterpret_cast<CCSPlayerPawn*>(pThis), pInfo, pResult->m_nDamageDealt);
+
+	if (pResult->m_nDamageDealt > 0 && g_cvarZMEnable.Get() && pThis->IsPawn())
+		ZM_OnPlayerTakeDamage(reinterpret_cast<CCSPlayerPawn*>(pThis), pInfo, pResult->m_nDamageDealt);
 
 	return 1;
 }
@@ -399,6 +403,9 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 
 	if (g_cvarEnableZR.Get())
 		ZR_Detour_CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
+	
+	if (g_cvarZMEnable.Get())
+		ZM_Detour_CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 
 	// Handle KeyValue(s)
 	if (!V_strnicmp(pInputName->String(), "KeyValue", 8))
@@ -784,6 +791,14 @@ AcquireResult FASTCALL Detour_CCSPlayer_ItemServices_CanAcquire(CCSPlayer_ItemSe
 	if (g_cvarEnableZR.Get())
 	{
 		AcquireResult zrResult = ZR_Detour_CCSPlayer_ItemServices_CanAcquire(pItemServices, pEconItem);
+
+		if (zrResult != AcquireResult::Allowed)
+			return zrResult;
+	}
+
+	if (g_cvarZMEnable.Get())
+	{
+		AcquireResult zrResult = ZM_Detour_CCSPlayer_ItemServices_CanAcquire(pItemServices, pEconItem);
 
 		if (zrResult != AcquireResult::Allowed)
 			return zrResult;

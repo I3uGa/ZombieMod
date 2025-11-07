@@ -1,6 +1,14 @@
 services:
   cs2fixes-build:
     image: ambuilder
-    build: .
+    build:
+      context: .
+      args:
+        HTTP_PROXY: http://192.168.2.100:7890
+        HTTPS_PROXY: http://192.168.2.100:7890
     volumes:
       - '.:/app/source'
+    environment:
+      - HTTP_PROXY=http://192.168.2.100:7890
+      - HTTPS_PROXY=http://192.168.2.100:7890
+      - NO_PROXY=localhost,127.0.0.1
