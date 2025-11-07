@@ -28,7 +28,7 @@
 
 using ordered_json = nlohmann::ordered_json;
 
-extern CConVar<bool> g_cvarEnableZM;
+extern CConVar<bool> g_cvarZMEnable;
 
 #define ZM_PREFIX " \4[ZombieMod]\1 "
 #define HUMAN_CLASS_KEY_NAME "zm_human_class"
@@ -45,8 +45,8 @@ extern EZMRoundState g_ZMRoundState;
 
 enum EZMSpawnType
 {
-	IN_PLACE,
-	RESPAWN,
+	ZM_IN_PLACE,
+	ZM_RESPAWN,
 };
 
 // model entries in zm classes

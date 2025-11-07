@@ -43,4 +43,5 @@
 
 #include "tier0/memdbgon.h"
 
-CConVar<bool> g_cvarEnableZM("zm_enable", FCVAR_NONE, "ZombieMod enabled or not.", false);
+CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false);
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0 a");

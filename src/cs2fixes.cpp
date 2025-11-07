@@ -59,6 +59,7 @@
 #include "usermessages.pb.h"
 #include "votemanager.h"
 #include "zombiereborn.h"
+#include "zombiemod.h"
 #include <entity.h>
 
 #include "tier0/memdbgon.h"
@@ -513,7 +514,7 @@ bool CS2Fixes::Unload(char* error, size_t maxlen)
 	if (g_pZRHitgroupConfig)
 		delete g_pZRHitgroupConfig;
 
-	if (g_pEntityListener)
+	if (g_pEntityListener && g_pEntitySystem)
 	{
 		g_pEntitySystem->RemoveListenerEntity(g_pEntityListener);
 		delete g_pEntityListener;

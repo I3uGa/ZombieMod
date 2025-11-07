@@ -1,0 +1,1 @@
+xcopy /y/s/e C:\Code\cs\ZombieMod\build\package\cs2 D:\cs2-ds\game\csgo\
