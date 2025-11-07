@@ -1,6 +1,6 @@
 # ZombieMod
 
-ZombieMod is a fork of CS2Fixes which is a Metamod plugin with fixes and features aimed but not limited to zombie escape. Instead of reinventing the wheel I'm building on the shoulders of giants and offering the first ZombieMod for CS2 as a module of CS2Fixes. Currently under development and not working yet.
+ZombieMod is a fork of CS2Fixes which is a Metamod plugin with fixes and features aimed but not limited to zombie escape. Instead of reinventing the wheel I'm building on the shoulders of giants and offering the first ZombieMod for CS2 as a module of CS2Fixes. Currently under development - it works. You can run it and let me know of any bugs you find.
 
 ## Installation
 

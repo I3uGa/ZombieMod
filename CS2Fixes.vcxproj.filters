@@ -33,6 +33,9 @@
     <Filter Include="Source Files\protobuf">
       <UniqueIdentifier>{7574cb5e-2839-4759-a10c-0630d8c36b2a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Non Build">
+      <UniqueIdentifier>{c835144b-1523-419b-9823-fe5b0466a6fc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\patches.cpp">
@@ -421,5 +424,10 @@
     <ClInclude Include="src\zombiemod.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md">
+      <Filter>Non Build</Filter>
+    </None>
   </ItemGroup>
 </Project>
