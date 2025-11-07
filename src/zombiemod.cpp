@@ -157,7 +157,7 @@ void ZM_OnRoundPrestart(IGameEvent* pEvent)
 		g_pGameRules->m_iMaxNumTerrorists = 64;
 	}
 
-	g_ZRRoundState = EZRRoundState::ROUND_START;
+	g_ZMRoundState = EZMRoundState::ROUND_START;
 	ZM_ToggleRespawn(true, true);
 
 	if (!GetGlobals())
@@ -207,10 +207,10 @@ void ZM_SetupCTeams()
 void ZM_OnRoundStart(IGameEvent* pEvent)
 {
 	ZM_SetupRespawnToggler();
-	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "The game is \x05Humans vs. Zombies\x01, the goal for zombies is to infect all humans by knifing them.");
+	ClientPrintAll(HUD_PRINTTALK, ZM_PREFIX "The game is \x05Humans vs. Zombies\x01, the goal for zombies is to infect all humans by knifing them.");
 
-	if (g_cvarZMInfectSpawnWarning.Get() && g_cvarZMInfectSpawnType.Get() == (int)EZRSpawnType::IN_PLACE)
-		ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "Classic spawn is enabled! Zombies will be \x07spawning between humans\x01!");
+	if (g_cvarZMInfectSpawnWarning.Get() && g_cvarZMInfectSpawnType.Get() == (int)EZMSpawnType::ZM_IN_PLACE)
+		ClientPrintAll(HUD_PRINTTALK, ZM_PREFIX "Classic spawn is enabled! Zombies will be \x07spawning between humans\x01!");
 
 	if (!GetGlobals())
 		return;
@@ -462,7 +462,7 @@ void ZM_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 	// We disabled damage due to the delayed infection, restore
 	pVictimPawn->m_bTakesDamage(true);
 
-	pVictimPawn->EmitSound("zr.amb.scream");
+	pVictimPawn->EmitSound("zm.amb.scream");
 
 	ZM_StripAndGiveKnife(pVictimPawn);
 
@@ -494,7 +494,7 @@ void ZM_InfectMotherZombie(CCSPlayerController* pVictimController, std::vector<S
 	ZM_StripAndGiveKnife(pVictimPawn);
 
 	// pick random spawn point
-	if (g_cvarZMInfectSpawnType.Get() == (int)EZRSpawnType::RESPAWN)
+	if (g_cvarZMInfectSpawnType.Get() == (int)EZMSpawnType::ZM_RESPAWN)
 	{
 		int randomindex = rand() % spawns.size();
 		Vector origin = spawns[randomindex]->GetAbsOrigin();
@@ -561,7 +561,7 @@ void ZM_InitialInfection()
 	std::vector<SpawnPoint*> spawns = ZM_GetSpawns();
 	if (g_cvarZMInfectSpawnType.Get() == (int)EZRSpawnType::RESPAWN && !spawns.size())
 	{
-		ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "There are no spawns!");
+		ClientPrintAll(HUD_PRINTTALK, ZM_PREFIX "There are no spawns!");
 		return;
 	}
 
@@ -633,8 +633,8 @@ void ZM_InitialInfection()
 		g_bRespawnEnabled = false;
 
 	SendHudMessageAll(4, EHudPriority::InfectionCountdown, "First infection has started!");
-	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "First infection has started! Good luck, survivors!");
-	g_ZRRoundState = EZRRoundState::POST_INFECTION;
+	ClientPrintAll(HUD_PRINTTALK, ZM_PREFIX "First infection has started! Good luck, survivors!");
+	g_ZMRoundState = EZMRoundState::POST_INFECTION;
 }
 
 void ZM_StartInitialCountdown()
@@ -645,7 +645,7 @@ void ZM_StartInitialCountdown()
 	int iRand = rand();
 	auto iSecondsElapsed = std::make_shared<int>(0);
 	CTimer::Create(0.0f, TIMERFLAG_MAP | TIMERFLAG_ROUND, [iRand, iSecondsElapsed]() {
-		if (g_ZRRoundState != EZRRoundState::ROUND_START)
+		if (g_ZMRoundState != EZMRoundState::ROUND_START)
 			return -1.0f;
 
 		int g_iInfectionCountDown = g_cvarZMInfectSpawnTimeMin.Get() + (iRand % (g_cvarZMInfectSpawnTimeMax.Get() - g_cvarZMInfectSpawnTimeMin.Get() + 1));
@@ -661,7 +661,7 @@ void ZM_StartInitialCountdown()
 		{
 			char classicSpawnMsg[256];
 
-			if (g_cvarZMInfectSpawnWarning.Get() && g_cvarZMInfectSpawnType.Get() == (int)EZRSpawnType::IN_PLACE)
+			if (g_cvarZMInfectSpawnWarning.Get() && g_cvarZMInfectSpawnType.Get() == (int)EZMSpawnType::ZM_IN_PLACE)
 				V_snprintf(classicSpawnMsg, sizeof(classicSpawnMsg), "<span color='#940000'>WARNING: </span><span color='#FF3333'>Zombies will spawn between humans!</span><br>\u00A0<br>");
 			else
 				V_snprintf(classicSpawnMsg, sizeof(classicSpawnMsg), "");
@@ -669,7 +669,7 @@ void ZM_StartInitialCountdown()
 			SendHudMessageAll(2, EHudPriority::InfectionCountdown, "%sFirst infection in <span color='#00FF00'>%i %s</span>!", classicSpawnMsg, g_iInfectionCountDown, g_iInfectionCountDown == 1 ? "second" : "seconds");
 
 			if (g_iInfectionCountDown % 5 == 0)
-				ClientPrintAll(HUD_PRINTTALK, "%sFirst infection in \7%i %s\1!", ZR_PREFIX, g_iInfectionCountDown, g_iInfectionCountDown == 1 ? "second" : "seconds");
+				ClientPrintAll(HUD_PRINTTALK, "%sFirst infection in \7%i %s\1!", ZM_PREFIX, g_iInfectionCountDown, g_iInfectionCountDown == 1 ? "second" : "seconds");
 		}
 		(*iSecondsElapsed)++;
 
@@ -765,12 +765,12 @@ void ZM_Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLar
 	else
 		return;
 
-	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "Respawning is %s!", g_bRespawnEnabled ? "enabled" : "disabled");
+	ClientPrintAll(HUD_PRINTTALK, ZM_PREFIX "Respawning is %s!", g_bRespawnEnabled ? "enabled" : "disabled");
 }
 
 void ZM_SpawnPlayer(CCSPlayerController* pController)
 {
-	pController->ChangeTeam(g_ZRRoundState == EZRRoundState::POST_INFECTION ? CS_TEAM_T : CS_TEAM_CT);
+	pController->ChangeTeam(g_ZMRoundState == EZMRoundState::POST_INFECTION ? CS_TEAM_T : CS_TEAM_CT);
 
 	// Make sure the round ends if spawning into an empty server
 	if (!ZM_IsTeamAlive(CS_TEAM_CT) && !ZM_IsTeamAlive(CS_TEAM_T) && g_ZMRoundState != EZMRoundState::ROUND_END)
@@ -779,7 +779,7 @@ void ZM_SpawnPlayer(CCSPlayerController* pController)
 			return;
 
 		g_pGameRules->TerminateRound(1.0f, CSRoundEndReason::GameStart);
-		g_ZRRoundState = EZRRoundState::ROUND_END;
+		g_ZMRoundState = EZMRoundState::ROUND_END;
 		return;
 	}
 
@@ -1032,7 +1032,7 @@ CON_COMMAND_CHAT(zmtele, "- Teleport to spawn")
 
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, ZM_PREFIX "You cannot use this command from the server console.");
 		return;
 	}
 
@@ -1177,7 +1177,7 @@ CON_COMMAND_CHAT_FLAGS(zminfect, "- Infect a player", ADMFLAG_GENERIC)
 		return;
 	}
 
-	if (g_ZRRoundState == EZRRoundState::ROUND_END)
+	if (g_ZMRoundState == EZMRoundState::ROUND_END)
 	{
 		ClientPrint(player, HUD_PRINTTALK, ZM_PREFIX "The round is already over!");
 		return;
@@ -1193,7 +1193,7 @@ CON_COMMAND_CHAT_FLAGS(zminfect, "- Infect a player", ADMFLAG_GENERIC)
 	const char* pszCommandPlayerName = player ? player->GetPlayerName() : CONSOLE_NAME;
 	std::vector<SpawnPoint*> spawns = ZM_GetSpawns();
 
-	if (g_cvarZMInfectSpawnType.Get() == (int)EZRSpawnType::RESPAWN && !spawns.size())
+	if (g_cvarZMInfectSpawnType.Get() == (int)EZMSpawnType::ZM_RESPAWN && !spawns.size())
 	{
 		ClientPrint(player, HUD_PRINTTALK, ZM_PREFIX "There are no spawns!");
 		return;
@@ -1210,10 +1210,10 @@ CON_COMMAND_CHAT_FLAGS(zminfect, "- Infect a player", ADMFLAG_GENERIC)
 			ZM_Infect(pTarget, pTarget, true);
 
 		if (iNumClients == 1)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "infected", g_ZRRoundState == EZRRoundState::ROUND_START ? " as a mother zombie" : "", ZR_PREFIX);
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "infected", g_ZMRoundState == EZMRoundState::ROUND_START ? " as a mother zombie" : "", ZM_PREFIX);
 	}
 	if (iNumClients > 1)
-		PrintMultiAdminAction(nType, pszCommandPlayerName, "infected", g_ZRRoundState == EZRRoundState::ROUND_START ? " as mother zombies" : "", ZR_PREFIX);
+		PrintMultiAdminAction(nType, pszCommandPlayerName, "infected", g_ZMRoundState == EZMRoundState::ROUND_START ? " as mother zombies" : "", ZM_PREFIX);
 
 	// Note we skip MZ immunity when first infection is manually triggered
 	if (g_ZMRoundState == EZMRoundState::ROUND_START)
@@ -1264,8 +1264,8 @@ CON_COMMAND_CHAT_FLAGS(zmrevive, "- Revive a player", ADMFLAG_GENERIC)
 		ZM_StripAndGiveKnife(pPawn);
 
 		if (iNumClients == 1)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "revived", "", ZR_PREFIX);
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "revived", "", ZM_PREFIX);
 	}
 	if (iNumClients > 1)
-		PrintMultiAdminAction(nType, pszCommandPlayerName, "revived", "", ZR_PREFIX);
+		PrintMultiAdminAction(nType, pszCommandPlayerName, "revived", "", ZM_PREFIX);
 }

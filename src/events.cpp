@@ -83,6 +83,9 @@ GAME_EVENT_F(round_prestart)
 	if (g_cvarEnableZR.Get())
 		ZR_OnRoundPrestart(pEvent);
 
+	if (g_cvarZMEnable.Get())
+		ZM_OnRoundPrestart(pEvent);
+
 	if (g_cvarEnableEntWatch.Get())
 		EW_RoundPreStart();
 }

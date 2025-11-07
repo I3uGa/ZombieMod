@@ -538,7 +538,6 @@ bool CS2Fixes::Unload(char* error, size_t maxlen)
 
 void CS2Fixes::Hook_DispatchConCommand(ConCommandRef cmdHandle, const CCommandContext& ctx, const CCommand& args)
 {
-	Message("DispatchCommand");
 	VPROF_BUDGET("CS2Fixes::Hook_DispatchConCommand", "ConCommands");
 
 	if (!g_pEntitySystem)
