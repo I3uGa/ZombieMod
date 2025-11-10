@@ -88,14 +88,10 @@ CConVar<float> g_cvarZMMaxZteleDistance("zm_zmtele_max_distance", FCVAR_NONE, "M
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
-	const char* classesToLoad = "zm";
 	g_pZRPlayerClassManager->LoadPlayerClass(EZRGameMode::GAMEMODE_ZM);
-	g_pZRPlayerClassManager->PrecacheModels(pResourceManifest);
 
 	pResourceManifest->AddResource(g_cvarZMHumanWinOverlayParticle.Get().String());
 	pResourceManifest->AddResource(g_cvarZMZombieWinOverlayParticle.Get().String());
-
-	pResourceManifest->AddResource("soundevents/soundevents_zm.vsndevts");
 }
 
 void ZM_OnLevelInit()
@@ -396,7 +392,7 @@ float ZM_MoanTimer(ZEPlayerHandle hPlayer)
 	if (!pPawn->IsAlive())
 		return g_cvarZMMoanInterval.Get();
 
-	pPawn->EmitSound("zm.amb.zombie_voice_idle");
+	pPawn->EmitSound("zr.amb.zombie_voice_idle");
 
 	return g_cvarZMMoanInterval.Get();
 }
@@ -463,7 +459,7 @@ void ZM_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 	// We disabled damage due to the delayed infection, restore
 	pVictimPawn->m_bTakesDamage(true);
 
-	pVictimPawn->EmitSound("zm.amb.scream");
+	pVictimPawn->EmitSound("zr.amb.scream");
 
 	ZM_StripAndGiveKnife(pVictimPawn);
 
@@ -504,7 +500,7 @@ void ZM_InfectMotherZombie(CCSPlayerController* pVictimController, std::vector<S
 		pVictimPawn->Teleport(&origin, &rotation, &vec3_origin);
 	}
 
-	pVictimPawn->EmitSound("zm.amb.scream");
+	pVictimPawn->EmitSound("zr.amb.scream");
 
 	std::shared_ptr<ZRZombieClass> pClass = g_pZRPlayerClassManager->GetZombieClass("MotherZombie");
 	if (pClass)
@@ -695,7 +691,7 @@ bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPa
 	}
 
 	if (g_cvarZMGroanChance.Get() && pVictimPawn->m_iTeamNum() == CS_TEAM_T && (rand() % g_cvarZMGroanChance.Get()) == 1)
-		pVictimPawn->EmitSound("zm.amb.zombie_pain");
+		pVictimPawn->EmitSound("zr.amb.zombie_pain");
 
 	// grenade and molotov knockback
 	if (pAttackerPawn->m_iTeamNum() == CS_TEAM_CT && pVictimPawn->m_iTeamNum() == CS_TEAM_T)
@@ -885,7 +881,7 @@ void ZM_OnPlayerDeath(IGameEvent* pEvent)
 	ZM_CheckTeamWinConditions(pVictimPawn->m_iTeamNum() == CS_TEAM_T ? CS_TEAM_CT : CS_TEAM_T);
 
 	if (pVictimPawn->m_iTeamNum() == CS_TEAM_T && g_ZMRoundState == EZMRoundState::POST_INFECTION)
-		pVictimPawn->EmitSound("zm.amb.zombie_die");
+		pVictimPawn->EmitSound("zr.amb.zombie_die");
 
 	// respawn player
 	CHandle<CCSPlayerController> handle = pVictimController->GetHandle();

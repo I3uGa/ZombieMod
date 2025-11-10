@@ -30,6 +30,7 @@
 #include "playermanager.h"
 #include "tier0/vprof.h"
 #include "zombiereborn.h"
+#include "zombiemod.h"
 
 #include "tier0/memdbgon.h"
 
@@ -160,6 +161,7 @@ GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
 	// pResourceManifest->AddResource("characters/models/my_character_model.vmdl");
 
 	ZR_Precache(pResourceManifest);
+	ZM_Precache(pResourceManifest);
 	PrecacheBeaconParticle(pResourceManifest);
 	Leader_Precache(pResourceManifest);
 
