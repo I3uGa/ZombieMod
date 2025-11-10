@@ -34,6 +34,12 @@ extern CConVar<bool> g_cvarEnableZR;
 #define HUMAN_CLASS_KEY_NAME "zr_human_class"
 #define ZOMBIE_CLASS_KEY_NAME "zr_zombie_class"
 
+enum class EZRGameMode
+{
+	GAMEMODE_ZM,
+	GAMEMODE_ZR,
+};
+
 enum class EZRRoundState
 {
 	ROUND_START,
@@ -200,7 +206,7 @@ struct ZRZombieClass : ZRClass
 class CZRPlayerClassManager
 {
 public:
-	void LoadPlayerClass();
+	void LoadPlayerClass(EZRGameMode gameMode = EZRGameMode::GAMEMODE_ZR);
 	void ApplyBaseClassVisuals(std::shared_ptr<ZRClass> pClass, CCSPlayerPawn* pPawn);
 	std::shared_ptr<ZRHumanClass> GetHumanClass(const char* pszClassName);
 	void ApplyHumanClass(std::shared_ptr<ZRHumanClass> pClass, CCSPlayerPawn* pPawn);
@@ -241,7 +247,7 @@ struct ZRHitgroup
 class ZRWeaponConfig
 {
 public:
-	void LoadWeaponConfig();
+	void LoadWeaponConfig(EZRGameMode gameMode = EZRGameMode::GAMEMODE_ZR);
 	std::shared_ptr<ZRWeapon> FindWeapon(const char* pszWeaponName);
 
 private:
@@ -253,7 +259,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 class ZRHitgroupConfig
 {
 public:
-	void LoadHitgroupConfig();
+	void LoadHitgroupConfig(EZRGameMode gameMode = EZRGameMode::GAMEMODE_ZR);
 	std::shared_ptr<ZRHitgroup> FindHitgroupIndex(int iIndex);
 
 private:

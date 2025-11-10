@@ -277,7 +277,7 @@ void CZRPlayerClassManager::PrecacheModels(IEntityResourceManifest* pResourceMan
 			pResourceManifest->AddResource(pModel->szModelPath.c_str());
 }
 
-void CZRPlayerClassManager::LoadPlayerClass()
+void CZRPlayerClassManager::LoadPlayerClass(EZRGameMode gameMode)
 {
 	Message("Loading PlayerClass...\n");
 	m_ZombieClassMap.clear();
@@ -287,9 +287,18 @@ void CZRPlayerClassManager::LoadPlayerClass()
 	m_vecZombieDefaultClass.clear();
 	m_vecHumanDefaultClass.clear();
 
-	const char* pszJsonPath = "addons/cs2fixes/configs/zr/playerclass.jsonc";
 	char szPath[MAX_PATH];
-	V_snprintf(szPath, sizeof(szPath), "%s%s%s", Plat_GetGameDirectory(), "/csgo/", pszJsonPath);
+	const char* pszJsonPath;
+	if (gameMode == EZRGameMode::GAMEMODE_ZR)
+	{
+		pszJsonPath = "addons/cs2fixes/configs/zr/playerclass.jsonc";
+		V_snprintf(szPath, sizeof(szPath), "%s%s%s", Plat_GetGameDirectory(), "/csgo/", pszJsonPath);
+	}
+	else
+	{
+		pszJsonPath = "addons/cs2fixes/configs/zm/playerclass.jsonc";
+		V_snprintf(szPath, sizeof(szPath), "%s%s%s", Plat_GetGameDirectory(), "/csgo/", pszJsonPath);
+	}
 	std::ifstream jsoncFile(szPath);
 
 	if (!jsoncFile.is_open())
@@ -731,13 +740,23 @@ void ZR_OnLevelInit()
 	SetupCTeams();
 }
 
-void ZRWeaponConfig::LoadWeaponConfig()
+void ZRWeaponConfig::LoadWeaponConfig(EZRGameMode gameMode)
 {
 	m_WeaponMap.clear();
 	KeyValues* pKV = new KeyValues("Weapons");
 	KeyValues::AutoDelete autoDelete(pKV);
 
-	const char* pszPath = "addons/cs2fixes/configs/zr/weapons.cfg";
+	const char* pszPath;
+
+	if (gameMode == EZRGameMode::GAMEMODE_ZR)
+	{
+		pszPath = "addons/cs2fixes/configs/zr/weapons.cfg";
+	}
+	else 
+	{
+		pszPath = "addons/cs2fixes/configs/zr/weapons.cfg";
+	}
+
 
 	if (!pKV->LoadFromFile(g_pFullFileSystem, pszPath))
 	{
@@ -777,13 +796,21 @@ std::shared_ptr<ZRWeapon> ZRWeaponConfig::FindWeapon(const char* pszWeaponName)
 	return nullptr;
 }
 
-void ZRHitgroupConfig::LoadHitgroupConfig()
+void ZRHitgroupConfig::LoadHitgroupConfig(EZRGameMode gameMode)
 {
 	m_HitgroupMap.clear();
 	KeyValues* pKV = new KeyValues("Hitgroups");
 	KeyValues::AutoDelete autoDelete(pKV);
 
-	const char* pszPath = "addons/cs2fixes/configs/zr/hitgroups.cfg";
+	const char* pszPath;
+	if (gameMode == EZRGameMode::GAMEMODE_ZR)
+	{
+		pszPath  = "addons/cs2fixes/configs/zr/hitgroups.cfg";
+	}
+	else
+	{
+		pszPath = "addons/cs2fixes/configs/zm/hitgroups.cfg";
+	}
 
 	if (!pKV->LoadFromFile(g_pFullFileSystem, pszPath))
 	{

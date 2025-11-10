@@ -88,7 +88,8 @@ CConVar<float> g_cvarZMMaxZteleDistance("zm_zmtele_max_distance", FCVAR_NONE, "M
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
-	g_pZRPlayerClassManager->LoadPlayerClass();
+	const char* classesToLoad = "zm";
+	g_pZRPlayerClassManager->LoadPlayerClass(EZRGameMode::GAMEMODE_ZM);
 	g_pZRPlayerClassManager->PrecacheModels(pResourceManifest);
 
 	pResourceManifest->AddResource(g_cvarZMHumanWinOverlayParticle.Get().String());
