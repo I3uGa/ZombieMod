@@ -63,3 +63,23 @@ ambuild
 ```
 
 Copy the contents of `build/package/cs2/` to your server's `game/csgo/` directory.
+
+#### Running Your server
+
+First make sure this is the command line:
+
+```
+-dedicated +dedicated +maxplayers 32 -condebug -nomaster +exec autoexec.cfg +sv_setsteamaccount <Your Account> -insecure +map de_dust2
+```
+
+Not sure if sv_setsteamaccount is required as the autoconfig.cfg below will cancel this out.
+
+Please add the below to your `autoexec.cfg` to prevent crashes
+
+```
+sv_lan 0
+bot_quota_mode fill
+game_mode 0
+sv_hibernate_when_empty 0
+sv_hibernate_postgame_delay 9999999999999999
+```
