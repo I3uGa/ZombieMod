@@ -69,7 +69,7 @@ Copy the contents of `build/package/cs2/` to your server's `game/csgo/` director
 First make sure this is the command line:
 
 ```
--dedicated +dedicated +maxplayers 32 -condebug -nomaster +exec autoexec.cfg +sv_setsteamaccount <Your Account> -insecure +map de_dust2
+-dedicated +dedicated +maxplayers 32 -condebug +exec autoexec.cfg +sv_setsteamaccount <Your Account> -insecure +map de_dust2
 ```
 
 Not sure if sv_setsteamaccount is required as the autoconfig.cfg below will cancel this out.
