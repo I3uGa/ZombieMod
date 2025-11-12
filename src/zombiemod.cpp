@@ -60,7 +60,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0 b");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0 c");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -111,8 +111,8 @@ void ZM_OnLevelInit()
 		return -1.0f;
 	});
 
-	g_pZRWeaponConfig->LoadWeaponConfig();
-	g_pZRHitgroupConfig->LoadHitgroupConfig();
+	g_pZRWeaponConfig->LoadWeaponConfig(EZRGameMode::GAMEMODE_ZM);
+	g_pZRHitgroupConfig->LoadHitgroupConfig(EZRGameMode::GAMEMODE_ZM);
 	ZM_SetupCTeams();
 }
 
@@ -1265,4 +1265,83 @@ CON_COMMAND_CHAT_FLAGS(zmrevive, "- Revive a player", ADMFLAG_GENERIC)
 	}
 	if (iNumClients > 1)
 		PrintMultiAdminAction(nType, pszCommandPlayerName, "revived", "", ZM_PREFIX);
+}
+
+CON_COMMAND_CHAT_FLAGS(zmshowme, "- Revive a player", ADMFLAG_GENERIC)
+{
+	int iSlot = player->GetPlayerSlot();
+	std::string sHudText = "";
+
+	sHudText.append("\n");
+	sHudText.append("This is a long message.\n");
+	sHudText.append("This is a long message.\n");
+	sHudText.append("This is a long message.\n");
+	sHudText.append("This is a long message.\n");
+	sHudText.append("This is a long message.\n");
+
+	CCSPlayerController* pController = CCSPlayerController::FromSlot(iSlot);
+	if (!pController)
+		return;
+	auto pPawn = pController->GetPawn();
+	if (!pPawn)
+		return;
+	ZEPlayer* zpPlayer = g_playerManager->GetPlayer(CPlayerSlot(iSlot));
+	if (!zpPlayer)
+		return;
+
+	EWHudMode mode = (EWHudMode)(zpPlayer->GetEntwatchHudMode());
+
+	CPointWorldText* pText = zpPlayer->GetEntwatchHud();
+	if (!pText)
+		return;
+	
+	pText->AcceptInput("SetMessage", sHudText.c_str());
+	PrintMultilineChat(iSlot, sHudText.c_str());
+
+
+}
+
+// Utility: split string by newline
+static std::vector<std::string> SplitLines(const std::string& text)
+{
+	std::vector<std::string> lines;
+	std::istringstream stream(text);
+	std::string line;
+
+	while (std::getline(stream, line))
+	{
+		// Remove any trailing \r from Windows line endings
+		if (!line.empty() && line.back() == '\r')
+			line.pop_back();
+
+		lines.push_back(line);
+	}
+
+	return lines;
+}
+
+// Prints each line to chat
+void PrintMultilineChat(CPlayerSlot slot, const std::string& message)
+{
+	if (message.empty())
+		return;
+
+	auto lines = SplitLines(message);
+
+	CCSPlayerController* pController = CCSPlayerController::FromSlot(slot);
+
+	for (const auto& line : lines)
+	{
+		if (!line.empty())
+		{
+			// Replace this call with your actual chat print function:
+			//   PrintToChat(slot, line.c_str());
+			//   player->PrintToChat(line.c_str());
+			// depending on your plugin API.
+			ClientPrint(pController, HUD_PRINTCENTER, line.c_str());
+			ClientPrint(pController, HUD_PRINTCONSOLE, line.c_str());
+			ClientPrint(pController, HUD_PRINTNOTIFY, line.c_str());
+			ClientPrint(pController, HUD_PRINTTALK, line.c_str());
+		}
+	}
 }

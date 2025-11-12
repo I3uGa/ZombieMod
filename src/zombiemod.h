@@ -63,3 +63,6 @@ void ZM_Hook_ClientPutInServer(CPlayerSlot slot, char const* pszName, int type, 
 void ZM_Hook_ClientCommand_JoinTeam(CPlayerSlot slot, const CCommand& args);
 void ZM_Precache(IEntityResourceManifest* pResourceManifest);
 bool ZM_CheckTeamWinConditions(int iTeamNum);
+
+static std::vector<std::string> SplitLines(const std::string& text);
+void PrintMultilineChat(CPlayerSlot slot, const std::string& message);
