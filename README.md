@@ -64,9 +64,9 @@ ambuild
 
 Copy the contents of `build/package/cs2/` to your server's `game/csgo/` directory.
 
-### Running Your server
+## Running Your server
 
-#### Pre-requisites
+### Pre-requisites
 
 Install the latest [MetaMod:Source](https://www.metamodsource.net/downloads.php/?branch=master) for your OS from the Dev branch.
 
@@ -80,7 +80,7 @@ mm_extra_addons 				"3157463861"
 
 We will be making our own once we are stable and happy but for now this works well.
 
-#### Running ZombieMod
+### Running ZombieMod
 
 Make sure this is the command line, insecure is important as we are using custom models and sounds:
 
