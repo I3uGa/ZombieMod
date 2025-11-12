@@ -754,7 +754,7 @@ void ZRWeaponConfig::LoadWeaponConfig(EZRGameMode gameMode)
 	}
 	else 
 	{
-		pszPath = "addons/cs2fixes/configs/zr/weapons.cfg";
+		pszPath = "addons/cs2fixes/configs/zm/weapons.cfg";
 	}
 
 
