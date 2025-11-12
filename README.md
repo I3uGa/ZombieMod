@@ -64,17 +64,31 @@ ambuild
 
 Copy the contents of `build/package/cs2/` to your server's `game/csgo/` directory.
 
-#### Running Your server
+### Running Your server
 
-First make sure this is the command line:
+#### Pre-requisites
+
+Install the latest [MetaMod:Source](https://www.metamodsource.net/downloads.php/?branch=master) for your OS from the Dev branch.
+
+Then install the latest [MultiAddonManager](https://github.com/Source2ZE/MultiAddonManager/releases) from the CS2Fixes team.
+
+Configure MultiAddonManager `cfg\multiaddonmanager\multiaddonmanager.cfg` to add the ZombieReborn zombie pack which includes models and sounds so clients can download it by changing this line:
 
 ```
--dedicated +dedicated +maxplayers 32 -condebug +exec autoexec.cfg +sv_setsteamaccount <Your Account> -insecure +map de_dust2
+mm_extra_addons 				"3157463861"
 ```
 
-Not sure if sv_setsteamaccount is required as the autoconfig.cfg below will cancel this out.
+We will be making our own once we are stable and happy but for now this works well.
 
-Please add the below to your `autoexec.cfg` to prevent crashes
+#### Running ZombieMod
+
+Make sure this is the command line, insecure is important as we are using custom models and sounds:
+
+```
+-dedicated +maxplayers 32 +exec autoexec.cfg +sv_setsteamaccount <Your Account> -insecure +map de_dust2
+```
+
+Please add the below to your `autoexec.cfg` to prevent crashes:
 
 ```
 sv_lan 0
@@ -83,3 +97,9 @@ game_mode 0
 sv_hibernate_when_empty 0
 sv_hibernate_postgame_delay 9999999999999999
 ```
+
+Then edit the `zm_` cvars in `cfg\cs2fixes\cs2fixes.cfg`
+
+The most important is `zm_enable 1`
+
+Finally rename the files in `addons\cs2fixes\configs\zm\` by removing the .example from the end and modifying them as you wish. This part is optional as it will work with default settings otherwise but the models will be normal CS2 models.
