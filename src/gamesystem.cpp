@@ -160,8 +160,12 @@ GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
 	// Any resource adding MUST be done here, the resource manifest is not long-lived
 	// pResourceManifest->AddResource("characters/models/my_character_model.vmdl");
 
-	ZR_Precache(pResourceManifest);
-	ZM_Precache(pResourceManifest);
+	if (g_cvarEnableZR.Get())
+		ZR_Precache(pResourceManifest);
+
+	if (g_cvarZMEnable.Get())
+		ZM_Precache(pResourceManifest);
+
 	PrecacheBeaconParticle(pResourceManifest);
 	Leader_Precache(pResourceManifest);
 

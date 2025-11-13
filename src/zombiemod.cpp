@@ -89,9 +89,12 @@ CConVar<float> g_cvarZMMaxZteleDistance("zm_zmtele_max_distance", FCVAR_NONE, "M
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
 	g_pZRPlayerClassManager->LoadPlayerClass(EZRGameMode::GAMEMODE_ZM);
+	g_pZRPlayerClassManager->PrecacheModels(pResourceManifest);
 
 	pResourceManifest->AddResource(g_cvarZMHumanWinOverlayParticle.Get().String());
 	pResourceManifest->AddResource(g_cvarZMZombieWinOverlayParticle.Get().String());
+
+	pResourceManifest->AddResource("soundevents/soundevents_zr.vsndevts");
 }
 
 void ZM_OnLevelInit()
