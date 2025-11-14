@@ -1046,9 +1046,6 @@ void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const boo
 			return;
 		}
 	}
-
-	if (*pNewValue != *pOldValue)
-		g_pEngineServer2->ServerCommand("reload\n");
 }
 
 CON_COMMAND_CHAT(zmtele, "- Teleport to spawn")
