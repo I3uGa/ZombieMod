@@ -1033,6 +1033,7 @@ void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const boo
 		{
 			cvar->Set(false);
 			Message(message);
+			return;
 		}
 	}
 
@@ -1042,8 +1043,12 @@ void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const boo
 		{
 			cvar->Set(false);
 			Message(message);
+			return;
 		}
 	}
+
+	if (*pNewValue != *pOldValue)
+		g_pEngineServer2->ServerCommand("reload\n");
 }
 
 CON_COMMAND_CHAT(zmtele, "- Teleport to spawn")
