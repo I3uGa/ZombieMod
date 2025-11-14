@@ -66,3 +66,5 @@ bool ZM_CheckTeamWinConditions(int iTeamNum);
 
 static std::vector<std::string> SplitLines(const std::string& text);
 void PrintMultilineChat(CPlayerSlot slot, const std::string& message);
+
+void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const bool* pNewValue, const bool* pOldValue);

@@ -59,7 +59,7 @@ extern CZRPlayerClassManager* g_pZRPlayerClassManager;
 extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
-CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false);
+CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
 CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0 d");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
@@ -1023,6 +1023,28 @@ void ZM_EndRoundAndAddTeamScore(int iTeamNum)
 	}
 }
 
+void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const bool* pNewValue, const bool* pOldValue)
+{
+	const char* message = "Cannot enable ZombieMod and Zombie:Reborn enabled at the same time.\n";
+
+	if (!V_strcmp(cvar->GetName(), g_cvarZMEnable.GetName()))
+	{
+		if (*pNewValue == true && g_cvarEnableZR.Get())
+		{
+			cvar->Set(false);
+			Message(message);
+		}
+	}
+
+	if (!V_strcmp(cvar->GetName(), g_cvarEnableZR.GetName()))
+	{
+		if (*pNewValue == true && g_cvarZMEnable.Get())
+		{
+			cvar->Set(false);
+			Message(message);
+		}
+	}
+}
 
 CON_COMMAND_CHAT(zmtele, "- Teleport to spawn")
 {
