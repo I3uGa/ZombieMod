@@ -133,16 +133,16 @@ void ZM_RespawnAll()
 	{
 		CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
 
+		if (!pController || pController->m_bIsHLTV || (pController->m_iTeamNum() != CS_TEAM_CT && pController->m_iTeamNum() != CS_TEAM_T))
+			continue;
+		pController->Respawn();
+
 		ZEPlayer* pPlayer = pController->GetZEPlayer();
 		if (pPlayer)
 		{
 			pPlayer->SetHumanTeleUsages(0);
 			pPlayer->SetZombieTeleUsages(0);
 		}
-
-		if (!pController || pController->m_bIsHLTV || (pController->m_iTeamNum() != CS_TEAM_CT && pController->m_iTeamNum() != CS_TEAM_T))
-			continue;
-		pController->Respawn();
 
 	}
 }
