@@ -84,12 +84,14 @@ CConVar<float> g_cvarZMNapalmFullDamage("zm_napalm_full_damage", FCVAR_NONE, "Th
 CConVar<float> g_cvarZMDamageCashScale("zm_damage_cash_scale", FCVAR_NONE, "Multiplier on cash given when damaging zombies (0.0 = disabled)", 0.0f, true, 0.0f, false, 100.0f);
 CConVar<int> g_cvarZMDefaultWinnerTeam("zm_default_winner_team", FCVAR_NONE, "Which team wins when time ran out [1 = Draw, 2 = Zombies, 3 = Humans]", CS_TEAM_SPECTATOR, true, 1, true, 3);
 CConVar<bool> g_cvarZMZteleHuman("zm_ztele_allow_humans", FCVAR_NONE, "Whether to allow humans to use zmtele", false);
+CConVar<bool> g_cvarZMZteleZombie("zm_ztele_allow_zombies", FCVAR_NONE, "Whether to allow zombies to use zmtele", false);
 CConVar<float> g_cvarZMMaxZteleDistance("zm_ztele_max_distance", FCVAR_NONE, "Maximum distance players are allowed to move after starting ztele", 150.0f, true, 0.0f, false, 0.0f);
 CConVar<bool> g_cvarZMTeleHumanAfter("zm_ztele_human_after", FCVAR_NONE, "Allow humans to use ZTele after the mother zombie has spawned. 0 means always allowed.", true);
-CConVar<float> g_cvarZMTeleDelayZombie("zm_ztele_delay_zombie", FCVAR_NONE, "Time between using ZTele command and teleportation for zombies. [Dependency: zr_ztele_zombie]", 3.0f, true, 1.0f, true, 100.0f);
-CConVar<float> g_cvarZMTeleDelayHuman("zm_ztele_delay_human", FCVAR_NONE, "Time between using ZTele command and teleportation for humans. [Dependency: zm_ztele_allow_humans]", 3.0f, true, 1.0f, true, 100.0f);
-CConVar<int> g_cvarZMTeleMaxZombie("zm_ztele_max_zombie", FCVAR_NONE, "Max number of times a zombie is allowed to use ZTele per round.", 3, true, 0, true, 30);
-CConVar<int> g_cvarZMTeleMaxHuman("zm_ztele_max_human", FCVAR_NONE, "Max number of times a human is allowed to use ZTele per round. [Dependency: zm_ztele_allow_humans]", 1, true, 0, true, 30);
+CConVar<bool> g_cvarZMTeleHumanBefore("zm_ztele_human_before", FCVAR_NONE, "Allow humans to use ZTele before the mother zombie has spawned.", true);
+CConVar<float> g_cvarZMTeleDelayZombie("zm_ztele_delay_zombie", FCVAR_NONE, "Time between using ZTele command and teleportation for zombies. [Dependency: zm_ztele_allow_zombies]", 3.0f, true, 1.0f, true, 100.0f);
+CConVar<float> g_cvarZMTeleDelayHuman("zm_ztele_delay_human", FCVAR_NONE, "Time between using ZTele command and teleportation for humans. [Dependency: zm_ztele_allow_humans & zm_ztele_human_(before)/(after)]", 3.0f, true, 1.0f, true, 100.0f);
+CConVar<int> g_cvarZMTeleMaxZombie("zm_ztele_max_zombie", FCVAR_NONE, "Max number of times a zombie is allowed to use ZTele per round. [Dependency: zm_ztele_allow_zombies]", 3, true, 0, true, 30);
+CConVar<int> g_cvarZMTeleMaxHuman("zm_ztele_max_human", FCVAR_NONE, "Max number of times a human is allowed to use ZTele per round. [Dependency: zm_ztele_allow_humans & zm_ztele_human_(before)/(after)]", 1, true, 0, true, 30);
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
@@ -1097,10 +1099,18 @@ CON_COMMAND_CHAT(zmtele, "- Teleport to spawn")
 		return;
 	}
 
-	if (g_cvarZMZteleHuman.Get() && g_cvarZMTeleHumanAfter.Get() && player->m_iTeamNum() == CS_TEAM_CT && g_ZMRoundState != EZMRoundState::POST_INFECTION)
+	if (g_cvarZMZteleHuman.Get() && player->m_iTeamNum() == CS_TEAM_CT)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZM_PREFIX "You can only use this command as a human after a zombie has been chosen.");
-		return;
+		if (g_cvarZMTeleHumanBefore.Get() && !g_cvarZMTeleHumanAfter.Get() && g_ZMRoundState == EZMRoundState::POST_INFECTION)
+		{
+			ClientPrint(player, HUD_PRINTTALK, ZM_PREFIX "You can only use this command as a human before a zombie has been chosen.");
+			return;
+		}
+		if (!g_cvarZMTeleHumanBefore.Get() && g_cvarZMTeleHumanAfter.Get() && g_ZMRoundState != EZMRoundState::POST_INFECTION)
+		{
+			ClientPrint(player, HUD_PRINTTALK, ZM_PREFIX "You can only use this command as a human after a zombie has been chosen.");
+			return;
+		}
 	}
 
 	std::vector<SpawnPoint*> spawns = ZM_GetSpawns();
