@@ -196,6 +196,8 @@ public:
 		m_flEntwatchHudX = -7.5f;
 		m_flEntwatchHudY = -2.0f;
 		m_flEntwatchHudSize = 60.0f;
+		m_iTeleUsagesHuman = 0;
+		m_iTeleUsagesZombie = 0;
 	}
 
 	~ZEPlayer()
@@ -266,6 +268,8 @@ public:
 	void SetEntwatchHudColor(Color colorHud);
 	void SetEntwatchHudPos(float x, float y);
 	void SetEntwatchHudSize(float flSize);
+	void SetHumanTeleUsages(int usages)	{ m_iTeleUsagesHuman = usages; }
+	void SetZombieTeleUsages(int usages) { m_iTeleUsagesZombie = usages; }
 
 	uint64 GetAdminFlags() { return m_iAdminFlags; }
 	int GetAdminImmunity() { return m_iAdminImmunity; }
@@ -315,6 +319,8 @@ public:
 	float GetEntwatchHudX() { return m_flEntwatchHudX; }
 	float GetEntwatchHudY() { return m_flEntwatchHudY; }
 	float GetEntwatchHudSize() { return m_flEntwatchHudSize; }
+	int GetHumanTeleUsages() { return m_iTeleUsagesHuman; }
+	int GetZombieTeleUsages() { return m_iTeleUsagesZombie; }
 
 	void OnSpawn();
 	void OnAuthenticated();
@@ -388,6 +394,9 @@ private:
 	float m_flEntwatchHudX;
 	float m_flEntwatchHudY;
 	float m_flEntwatchHudSize;
+
+	int m_iTeleUsagesHuman;
+	int m_iTeleUsagesZombie;
 };
 
 class CPlayerManager
