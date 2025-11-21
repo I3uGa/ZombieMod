@@ -1780,6 +1780,12 @@ void ZR_EndRoundAndAddTeamScore(int iTeamNum)
 
 CON_COMMAND_CHAT(ztele, "- Teleport to spawn")
 {
+	if (g_cvarZMEnable.Get())
+	{
+		zmtele_callback(args, player);
+		return;
+	}
+
 	// Silently return so the command is completely hidden
 	if (!g_cvarEnableZR.Get())
 		return;
@@ -1855,6 +1861,13 @@ CON_COMMAND_CHAT(ztele, "- Teleport to spawn")
 
 CON_COMMAND_CHAT(zclass, "<teamname/class name/number> - Find and select your Z:R classes")
 {
+
+	if (g_cvarZMEnable.Get())
+	{
+		zmclass_callback(args, player);
+		return;
+	}
+
 	// Silently return so the command is completely hidden
 	if (!g_cvarEnableZR.Get())
 		return;
@@ -1921,6 +1934,12 @@ CON_COMMAND_CHAT(zclass, "<teamname/class name/number> - Find and select your Z:
 
 CON_COMMAND_CHAT_FLAGS(infect, "- Infect a player", ADMFLAG_GENERIC)
 {
+	if (g_cvarZMEnable.Get())
+	{
+		zminfect_callback(args, player);
+		return;
+	}
+
 	// Silently return so the command is completely hidden
 	if (!g_cvarEnableZR.Get())
 		return;
@@ -1981,6 +2000,12 @@ CON_COMMAND_CHAT_FLAGS(infect, "- Infect a player", ADMFLAG_GENERIC)
 
 CON_COMMAND_CHAT_FLAGS(revive, "- Revive a player", ADMFLAG_GENERIC)
 {
+	if (g_cvarZMEnable.Get())
+	{
+		zmrevive_callback(args, player);
+		return;
+	}
+
 	// Silently return so the command is completely hidden
 	if (!g_cvarEnableZR.Get())
 		return;
