@@ -60,7 +60,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0h");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0i");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -92,6 +92,8 @@ CConVar<float> g_cvarZMTeleDelayZombie("zm_ztele_delay_zombie", FCVAR_NONE, "Tim
 CConVar<float> g_cvarZMTeleDelayHuman("zm_ztele_delay_human", FCVAR_NONE, "Time between using ZTele command and teleportation for humans. [Dependency: zm_ztele_allow_humans & zm_ztele_human_(before)/(after)]", 3.0f, true, 1.0f, true, 100.0f);
 CConVar<int> g_cvarZMTeleMaxZombie("zm_ztele_max_zombie", FCVAR_NONE, "Max number of times a zombie is allowed to use ZTele per round. [Dependency: zm_ztele_allow_zombies]", 3, true, 0, true, 30);
 CConVar<int> g_cvarZMTeleMaxHuman("zm_ztele_max_human", FCVAR_NONE, "Max number of times a human is allowed to use ZTele per round. [Dependency: zm_ztele_allow_humans & zm_ztele_human_(before)/(after)]", 1, true, 0, true, 30);
+CConVar<bool> g_cvarZMInfiniteAmmo("zm_infinite_ammo", FCVAR_NONE, "Whether or not ammo gets set to 999 in the mag after first reload.", false);
+CConVar<int> g_cvarZMInfiniteAmmoTotal("zm_infinite_ammo_total", FCVAR_NONE, "The total amount of actual bullets to count as 'infinite'.", 9999, true, 999, true, 99999);
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
@@ -1051,6 +1053,21 @@ void ZM_EndRoundAndAddTeamScore(int iTeamNum)
 			CRecipientFilter filter;
 			filter.AddAllPlayers();
 			g_hTeamT->DispatchParticle(g_cvarZMZombieWinOverlayParticle.Get().String(), &filter, PATTACH_MAIN_VIEW);
+		}
+	}
+}
+
+void ZM_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon* pWeapon)
+{
+	if (g_cvarZMInfiniteAmmo.Get())
+	{
+		if (pWeapon && pWeapon->GetWeaponVData() && pWeapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_RIFLE || pWeapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_PISTOL)
+		{
+			int ammo = g_cvarZMInfiniteAmmoTotal.Get();
+			pWeapon->GetWeaponVData()->m_nPrimaryReserveAmmoMax() = ammo;
+			pWeapon->GetWeaponVData()->m_iMaxClip1() = ammo;
+			std::string sAmmo = std::to_string(ammo);
+			pWeapon->AcceptInput("SetReserveAmmoAmount", sAmmo.c_str()); // 999 will be automatically clamped to the weapons m_nPrimaryReserveAmmoMax
 		}
 	}
 }

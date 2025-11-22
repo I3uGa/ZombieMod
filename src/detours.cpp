@@ -391,6 +391,9 @@ bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices* p
 
 void FASTCALL Detour_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon* pPlayerWeapon)
 {
+	if (g_cvarZMEnable.Get())
+		ZM_CCSPlayer_WeaponServices_EquipWeapon(pWeaponServices, pPlayerWeapon);
+
 	if (g_cvarEnableEntWatch.Get())
 		EW_Detour_CCSPlayer_WeaponServices_EquipWeapon(pWeaponServices, pPlayerWeapon);
 

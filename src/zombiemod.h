@@ -30,6 +30,8 @@
 using ordered_json = nlohmann::ordered_json;
 
 extern CConVar<bool> g_cvarZMEnable;
+extern CConVar<bool> g_cvarZMInfiniteAmmo;
+extern CConVar<int> g_cvarZMInfiniteAmmoTotal;
 
 #define ZM_PREFIX " \4[ZombieMod]\1 "
 
@@ -63,6 +65,7 @@ void ZM_Hook_ClientPutInServer(CPlayerSlot slot, char const* pszName, int type, 
 void ZM_Hook_ClientCommand_JoinTeam(CPlayerSlot slot, const CCommand& args);
 void ZM_Precache(IEntityResourceManifest* pResourceManifest);
 bool ZM_CheckTeamWinConditions(int iTeamNum);
+void ZM_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon* pWeapon);
 
 static std::vector<std::string> SplitLines(const std::string& text);
 void PrintMultilineChat(CPlayerSlot slot, const std::string& message);

@@ -40,6 +40,8 @@
 
 #include "tier0/memdbgon.h"
 
+#include "zombiemod.h"
+
 CPlayerManager* g_playerManager = nullptr;
 
 CConVar<int> g_cvarAdminImmunityTargetting("cs2f_admin_immunity", FCVAR_NONE, "Mode for which admin immunity system targetting allows: 0 - strictly lower, 1 - equal to or lower, 2 - ignore immunity levels", 0, true, 0, true, 2);
@@ -1087,7 +1089,7 @@ CConVar<bool> g_cvarInfiniteAmmo("cs2f_infinite_reserve_ammo", FCVAR_NONE, "Whet
 void CPlayerManager::SetupInfiniteAmmo()
 {
 	CTimer::Create(5.0f, TIMERFLAG_MAP, []() {
-		if (!g_cvarInfiniteAmmo.Get() || !GetGlobals())
+		if ((!g_cvarInfiniteAmmo.Get() && !g_cvarZMInfiniteAmmo.Get()) || !GetGlobals())
 			return 5.0f;
 
 		VPROF("CPlayerManager::InfiniteAmmoTimer");
@@ -1119,8 +1121,19 @@ void CPlayerManager::SetupInfiniteAmmo()
 				if (!weapon)
 					continue;
 
-				if (weapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_RIFLE || weapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_PISTOL)
-					weapon->AcceptInput("SetReserveAmmoAmount", "999"); // 999 will be automatically clamped to the weapons m_nPrimaryReserveAmmoMax
+				if (g_cvarZMInfiniteAmmo.Get())
+				{
+					int ammo = g_cvarZMInfiniteAmmoTotal.Get();
+					weapon->GetWeaponVData()->m_nPrimaryReserveAmmoMax() = ammo;
+					weapon->GetWeaponVData()->m_iMaxClip1() = ammo;
+					std::string sAmmo = std::to_string(ammo);
+					weapon->AcceptInput("SetReserveAmmoAmount", sAmmo.c_str()); // 999 will be automatically clamped to the weapons m_nPrimaryReserveAmmoMax
+				}
+				else
+				{
+					if (weapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_RIFLE || weapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_PISTOL)
+						weapon->AcceptInput("SetReserveAmmoAmount", "999"); // 999 will be automatically clamped to the weapons m_nPrimaryReserveAmmoMax
+				}
 			}
 		}
 
