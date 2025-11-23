@@ -1121,18 +1121,20 @@ void CPlayerManager::SetupInfiniteAmmo()
 				if (!weapon)
 					continue;
 
-				if (g_cvarZMInfiniteAmmo.Get())
+				if (weapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_RIFLE || weapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_PISTOL)
 				{
-					int ammo = g_cvarZMInfiniteAmmoTotal.Get();
-					weapon->GetWeaponVData()->m_nPrimaryReserveAmmoMax() = ammo;
-					weapon->GetWeaponVData()->m_iMaxClip1() = ammo;
-					std::string sAmmo = std::to_string(ammo);
-					weapon->AcceptInput("SetReserveAmmoAmount", sAmmo.c_str()); // 999 will be automatically clamped to the weapons m_nPrimaryReserveAmmoMax
-				}
-				else
-				{
-					if (weapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_RIFLE || weapon->GetWeaponVData()->m_GearSlot() == GEAR_SLOT_PISTOL)
+					if (g_cvarZMInfiniteAmmo.Get())
+					{
+						int ammo = g_cvarZMInfiniteAmmoTotal.Get();
+						weapon->GetWeaponVData()->m_nPrimaryReserveAmmoMax() = ammo;
+						weapon->GetWeaponVData()->m_iMaxClip1() = ammo;
+						std::string sAmmo = std::to_string(ammo);
+						weapon->AcceptInput("SetReserveAmmoAmount", sAmmo.c_str()); // 999 will be automatically clamped to the weapons m_nPrimaryReserveAmmoMax
+					}
+					else
+					{
 						weapon->AcceptInput("SetReserveAmmoAmount", "999"); // 999 will be automatically clamped to the weapons m_nPrimaryReserveAmmoMax
+					}
 				}
 			}
 		}
