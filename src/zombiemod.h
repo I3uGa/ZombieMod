@@ -32,6 +32,7 @@ using ordered_json = nlohmann::ordered_json;
 extern CConVar<bool> g_cvarZMEnable;
 extern CConVar<bool> g_cvarZMInfiniteAmmo;
 extern CConVar<int> g_cvarZMInfiniteAmmoTotal;
+extern CConVar<bool> g_cvarZMUserPresToFile;
 
 #define ZM_PREFIX " \4[ZombieMod]\1 "
 

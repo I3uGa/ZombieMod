@@ -27,6 +27,8 @@
 #include <string>
 #undef snprintf
 #include "vendor/nlohmann/json.hpp"
+#include <fstream>      // std::ifstream, std::ofstream
+#include "zombiemod.h"
 
 using json = nlohmann::json;
 
@@ -265,13 +267,88 @@ void CUserPreferencesREST::JsonToPreferencesMap(json data, UserPrefsMap_t& prefe
 	}
 }
 
+static std::string GetUserPrefsFilePath(uint64 iSteamId)
+{
+	char szPath[256];
+	const char* pszJsonPath = "addons/cs2fixes/data/";
+	V_snprintf(szPath, sizeof(szPath), "%s%s%s%llu.json", Plat_GetGameDirectory(), "/csgo/", pszJsonPath, iSteamId);
+	return std::string(szPath);
+}
+
+void CUserPreferencesREST::LoadPreferencesFile(uint64 iSteamId, StorageCallback_t cb)
+{
+	const std::string filePath = GetUserPrefsFilePath(iSteamId);
+
+	std::ifstream in(filePath);
+	if (!in.is_open())
+	{
+		UserPrefsMap_t empty;
+		cb(iSteamId, empty);
+		return;
+	}
+
+	json data;
+	try
+	{
+		in >> data; // nlohmann::json stream operator
+	}
+	catch (const std::exception& e)
+	{
+		UserPrefsMap_t empty;
+		cb(iSteamId, empty);
+		return;
+	}
+
+	UserPrefsMap_t preferencesMap;
+	JsonToPreferencesMap(data, preferencesMap);
+
+	cb(iSteamId, preferencesMap);
+	preferencesMap.clear();
+}
+
+void CUserPreferencesREST::StorePreferencesFile(uint64 iSteamId, UserPrefsMap_t& preferences, StorageCallback_t cb)
+{
+	// Build JSON object from map (same as before)
+	json sJsonObject = json::object();
+	for (const auto& [_, prefValue] : preferences)
+		sJsonObject[prefValue->GetKey()] = prefValue->GetValue();
+
+	const std::string filePath = GetUserPrefsFilePath(iSteamId);
+
+	std::ofstream out(filePath);
+	if (!out.is_open())
+	{
+		cb(iSteamId, preferences);
+		return;
+	}
+
+	// Pretty print with 4 spaces; use dump() with no arg for compact
+	out << sJsonObject.dump(4);
+
+	// Option 1: mimic the old behavior: rebuild map from JSON
+	UserPrefsMap_t preferencesMap;
+	JsonToPreferencesMap(sJsonObject, preferencesMap);
+	cb(iSteamId, preferencesMap);
+	preferencesMap.clear();
+
+	// Option 2 (simpler): just call cb with `preferences`
+	// cb(iSteamId, preferences);
+}
+
 void CUserPreferencesREST::LoadPreferences(uint64 iSteamId, StorageCallback_t cb)
 {
 #ifdef _DEBUG
 	Message("Loading data for %llu\n", iSteamId);
 #endif
-	if (g_cvarUserPrefsAPI.Get().Length() == 0)
+	if (g_cvarZMEnable.Get() && g_cvarUserPrefsAPI.Get().Length() == 0 && g_cvarZMUserPresToFile.Get())
+	{
+		LoadPreferencesFile(iSteamId, cb);
 		return;
+	}
+	else if (g_cvarUserPrefsAPI.Get().Length() == 0)
+	{
+		return;
+	}
 
 	// Submit the request to pull the user data
 	char sUserPreferencesUrl[256];
@@ -292,8 +369,15 @@ void CUserPreferencesREST::StorePreferences(uint64 iSteamId, UserPrefsMap_t& pre
 #ifdef _DEBUG
 	Message("Storing data for %llu\n", iSteamId);
 #endif
-	if (g_cvarUserPrefsAPI.Get().Length() == 0)
+	if (g_cvarZMEnable.Get() && g_cvarUserPrefsAPI.Get().Length() == 0 && g_cvarZMUserPresToFile.Get())
+	{
+		StorePreferencesFile(iSteamId, preferences, cb);
 		return;
+	}
+	else if (g_cvarUserPrefsAPI.Get().Length() == 0)
+	{
+		return;
+	}
 
 	// Create the JSON object with all key-value pairs
 	json sJsonObject = json::object();

@@ -68,6 +68,9 @@ public:
 	void LoadPreferences(uint64 iSteamId, StorageCallback_t cb);
 	void StorePreferences(uint64 iSteamId, UserPrefsMap_t& preferences, StorageCallback_t cb);
 	void JsonToPreferencesMap(json data, UserPrefsMap_t& preferences);
+
+	void LoadPreferencesFile(uint64 iSteamId, StorageCallback_t cb);
+	void StorePreferencesFile(uint64 iSteamId, UserPrefsMap_t& preferences, StorageCallback_t cb);
 };
 
 class CUserPreferencesSystem

@@ -94,6 +94,7 @@ CConVar<int> g_cvarZMTeleMaxZombie("zm_ztele_max_zombie", FCVAR_NONE, "Max numbe
 CConVar<int> g_cvarZMTeleMaxHuman("zm_ztele_max_human", FCVAR_NONE, "Max number of times a human is allowed to use ZTele per round. [Dependency: zm_ztele_allow_humans & zm_ztele_human_(before)/(after)]", 1, true, 0, true, 30);
 CConVar<bool> g_cvarZMInfiniteAmmo("zm_infinite_ammo", FCVAR_NONE, "Whether or not ammo gets set to 999 in the mag after first reload.", false);
 CConVar<int> g_cvarZMInfiniteAmmoTotal("zm_infinite_ammo_total", FCVAR_NONE, "The total amount of actual bullets to count as 'infinite'.", 9999, true, 999, true, 99999);
+CConVar<bool> g_cvarZMUserPresToFile("zm_user_prefs_to_file", FCVAR_NONE, "Whether to save user prefs to a file if cs2f_user_prefs_api is not set [Folder on server needs to be read/writeable by the game and is game/csgo/addons/cs2fixes/data]", true);
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
