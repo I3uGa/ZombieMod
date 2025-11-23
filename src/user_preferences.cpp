@@ -287,12 +287,15 @@ void CUserPreferencesREST::LoadPreferencesFile(uint64 iSteamId, StorageCallback_
 		return;
 	}
 
-	json data;
-	try
-	{
-		in >> data; // nlohmann::json stream operator
-	}
-	catch (const std::exception& e)
+	// Read whole file into a string
+	std::stringstream buffer;
+	buffer << in.rdbuf();
+	std::string contents = buffer.str();
+
+	// Parse WITHOUT exceptions (last param = false)
+	json data = json::parse(contents, /*cb=*/nullptr, /*allow_exceptions=*/false);
+
+	if (data.is_discarded())
 	{
 		UserPrefsMap_t empty;
 		cb(iSteamId, empty);
@@ -308,7 +311,8 @@ void CUserPreferencesREST::LoadPreferencesFile(uint64 iSteamId, StorageCallback_
 
 void CUserPreferencesREST::StorePreferencesFile(uint64 iSteamId, UserPrefsMap_t& preferences, StorageCallback_t cb)
 {
-	// Build JSON object from map (same as before)
+
+    // Build JSON object from map
 	json sJsonObject = json::object();
 	for (const auto& [_, prefValue] : preferences)
 		sJsonObject[prefValue->GetKey()] = prefValue->GetValue();
@@ -318,12 +322,13 @@ void CUserPreferencesREST::StorePreferencesFile(uint64 iSteamId, UserPrefsMap_t&
 	std::ofstream out(filePath);
 	if (!out.is_open())
 	{
+		// Still call cb with existing prefs if you want
 		cb(iSteamId, preferences);
 		return;
 	}
 
-	// Pretty print with 4 spaces; use dump() with no arg for compact
-	out << sJsonObject.dump(4);
+	out << sJsonObject.dump(4); // pretty-print
+
 
 	// Option 1: mimic the old behavior: rebuild map from JSON
 	UserPrefsMap_t preferencesMap;
