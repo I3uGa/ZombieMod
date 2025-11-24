@@ -48,6 +48,7 @@
 void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pVictimController, bool bBroadcast);
 void ZR_Cure(CCSPlayerController* pTargetController);
 void ZR_EndRoundAndAddTeamScore(int iTeamNum);
+void ZR_CheckForLadderExits();
 void SetupCTeams();
 bool ZR_IsTeamAlive(int iTeamNum);
 
@@ -493,7 +494,10 @@ void CZRPlayerClassManager::ApplyBaseClass(std::shared_ptr<ZRClass> pClass, CCSP
 	// pPawn->m_flVelocityModifier = pClass->flSpeed;
 	const auto pController = reinterpret_cast<CCSPlayerController*>(pPawn->GetController());
 	if (const auto pPlayer = pController != nullptr ? pController->GetZEPlayer() : nullptr)
+	{
 		pPlayer->SetMaxSpeed(pClass->flSpeed);
+		pPlayer->SetGravity(pClass->flGravity);
+	}
 
 	ApplyBaseClassVisuals(pClass, pPawn);
 }
@@ -1775,6 +1779,32 @@ void ZR_EndRoundAndAddTeamScore(int iTeamNum)
 			filter.AddAllPlayers();
 			g_hTeamT->DispatchParticle(g_cvarZombieWinOverlayParticle.Get().String(), &filter, PATTACH_MAIN_VIEW);
 		}
+	}
+}
+
+static bool g_pOnLadder[MAXPLAYERS + 1] = {false};
+
+void ZR_CheckForLadderExits()
+{
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
+
+		if (!pPlayer) // || pPlayer->IsFakeClient() || !pPlayer->IsAuthenticated())
+			continue;
+
+		auto slot = pPlayer->GetPlayerSlot();
+		CCSPlayerController* pTarget = CCSPlayerController::FromSlot(slot);
+
+		if (!pTarget || !pTarget->m_bPawnIsAlive)
+			continue;
+
+		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pTarget->GetPawn();
+		auto movetype = pPawn->m_MoveType();
+
+		if (g_pOnLadder[i] && movetype != MOVETYPE_LADDER)
+			pPawn->SetGravityScale(pPlayer->GetGravity());
+		g_pOnLadder[i] = (movetype == MOVETYPE_LADDER);
 	}
 }
 

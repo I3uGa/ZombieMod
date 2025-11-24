@@ -1010,6 +1010,12 @@ void CS2Fixes::Hook_GameFramePost(bool simulating, bool bFirstTick, bool bLastTi
 
 	RunTimers();
 	EntityHandler_OnGameFramePost(simulating, GetGlobals()->tickcount);
+
+	if (g_cvarEnableZR.Get())
+		ZR_CheckForLadderExits();
+
+	if (g_cvarZMEnable.Get())
+		ZM_CheckForLadderExits();
 }
 
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount, CBitVec<16384>& unionTransmitEdicts,

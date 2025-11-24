@@ -198,6 +198,7 @@ public:
 		m_flEntwatchHudSize = 60.0f;
 		m_iTeleUsagesHuman = 0;
 		m_iTeleUsagesZombie = 0;
+		m_flGravity = 0.0f;
 	}
 
 	~ZEPlayer()
@@ -257,6 +258,7 @@ public:
 	void SetLastInputs(uint64 iLastInputs) { m_iLastInputs = iLastInputs; }
 	void UpdateLastInputTime() { m_iLastInputTime = std::time(0); }
 	void SetMaxSpeed(float flMaxSpeed) { m_flMaxSpeed = flMaxSpeed; } // BROKEN ON WINDOWS
+	void SetGravity(float flGravity) { m_flGravity = flGravity; }
 	void CycleButtonWatch();
 	void ReplicateConVar(const char* pszName, const char* pszValue);
 	void SetActiveZRClass(std::shared_ptr<ZRClass> pZRModel) { m_pActiveZRClass = pZRModel; }
@@ -306,6 +308,7 @@ public:
 	CBaseModelEntity* GetGlowModel() { return m_hGlowModel.Get(); }
 	float GetSpeedMod() { return m_flSpeedMod; }
 	float GetMaxSpeed() { return m_flMaxSpeed; }
+	float GetGravity() { return m_flGravity; }
 	uint64 GetLastInputs() { return m_iLastInputs; }
 	std::time_t GetLastInputTime() { return m_iLastInputTime; }
 	std::shared_ptr<ZRClass> GetActiveZRClass() { return m_pActiveZRClass; }
@@ -397,6 +400,8 @@ private:
 
 	int m_iTeleUsagesHuman;
 	int m_iTeleUsagesZombie;
+
+	float m_flGravity;
 };
 
 class CPlayerManager
