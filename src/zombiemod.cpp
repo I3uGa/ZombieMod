@@ -60,7 +60,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0m");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0o");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -95,6 +95,8 @@ CConVar<int> g_cvarZMTeleMaxHuman("zm_ztele_max_human", FCVAR_NONE, "Max number 
 CConVar<bool> g_cvarZMInfiniteAmmo("zm_infinite_ammo", FCVAR_NONE, "Whether or not ammo gets set to 999 in the mag after first reload.", false);
 CConVar<int> g_cvarZMInfiniteAmmoTotal("zm_infinite_ammo_total", FCVAR_NONE, "The total amount of actual bullets to count as 'infinite'.", 9999, true, 999, true, 99999);
 CConVar<bool> g_cvarZMUserPresToFile("zm_user_prefs_to_file", FCVAR_NONE, "Whether to save user prefs to a file if cs2f_user_prefs_api is not set [Folder on server needs to be read/writeable by the game and is game/csgo/addons/cs2fixes/data]", true);
+
+CConVar<bool> g_cvarZMRunWithBots("zm_run_with_bots", FCVAR_NONE, "When true, the server will end rounds as normal when only bots exist in the server.", false);
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
@@ -990,11 +992,18 @@ void ZM_EndRoundAndAddTeamScore(int iTeamNum)
 	{
 		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
 
-		if (!pPlayer || !pPlayer->IsConnected() || !pPlayer->IsInGame() || pPlayer->IsFakeClient())
-			continue;
-
-		pPlayer->SetHumanTeleUsages(0);
-		pPlayer->SetZombieTeleUsages(0);
+		if (g_cvarZMRunWithBots.Get())
+		{
+			// Don't skip any players, even bots.
+			if (!pPlayer || (!(pPlayer->IsConnected() && pPlayer->IsInGame()) && !pPlayer->IsFakeClient()))
+				continue;
+		}
+		else
+		{
+			// Only checks for connected real players for activity.
+			if (!pPlayer || !pPlayer->IsConnected() || !pPlayer->IsInGame() || pPlayer->IsFakeClient())
+				continue;
+		}
 
 		bServerIdle = false;
 		break;
@@ -1073,8 +1082,6 @@ void ZM_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServices* pWeaponSe
 	}
 }
 
-static bool g_pOnLadder[MAXPLAYERS + 1] = {false};
-
 void ZM_CheckForLadderExits()
 {
 	for (int i = 0; i < MAXPLAYERS; i++)
@@ -1093,11 +1100,10 @@ void ZM_CheckForLadderExits()
 		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pTarget->GetPawn();
 		auto movetype = pPawn->m_MoveType();
 
-		if (g_pOnLadder[i] && movetype != MOVETYPE_LADDER)
-		{
+		if (pPlayer->GetMoveType() == MOVETYPE_LADDER && movetype != MOVETYPE_LADDER) // They were on ladder and now are not so they have left the ladder so reset gravity.
 			pPawn->SetGravityScale(pPlayer->GetGravity());
-		}
-		g_pOnLadder[i] = (movetype == MOVETYPE_LADDER);
+
+		pPlayer->SetMoveType(movetype);
 	}
 }
 

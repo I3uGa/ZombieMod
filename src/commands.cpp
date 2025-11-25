@@ -315,13 +315,39 @@ bool CChatCommand::CheckCommandAccess(CCSPlayerController* pPlayer, uint64 flags
 	return true;
 }
 
+bool IsAllowedChar(char c)
+{
+	// Keep ASCII printable characters only:
+	// Space (32) through tilde (126)
+	return (c >= 32 && c <= 126);
+}
+
+std::string StripUnprintable(char buf[], int len)
+{
+	// Make sure len is sane and buffer is null-terminated
+	if (len < 0)
+		len = 0;
+
+	std::string clean;
+	clean.reserve(len);
+
+	for (int i = 0; i < len; ++i)
+	{
+		unsigned char c = static_cast<unsigned char>(buf[i]);
+		if (IsAllowedChar(c))
+			clean.push_back(static_cast<char>(c));
+		// else: drop it
+	}
+	return clean;
+}
+
 void ClientPrintAll(int hud_dest, const char* msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
 
 	char buf[256];
-	V_vsnprintf(buf, sizeof(buf), msg, args);
+	int len = V_vsnprintf(buf, sizeof(buf), msg, args);
 
 	va_end(args);
 
@@ -338,7 +364,7 @@ void ClientPrintAll(int hud_dest, const char* msg, ...)
 
 	delete data;
 
-	ConMsg("%s\n", buf);
+	ConMsg("%s\n", StripUnprintable(buf, len).c_str());
 }
 
 void ClientPrint(CCSPlayerController* player, int hud_dest, const char* msg, ...)
@@ -347,13 +373,13 @@ void ClientPrint(CCSPlayerController* player, int hud_dest, const char* msg, ...
 	va_start(args, msg);
 
 	char buf[256];
-	V_vsnprintf(buf, sizeof(buf), msg, args);
+	int len = V_vsnprintf(buf, sizeof(buf), msg, args);
 
 	va_end(args);
 
 	if (!player || !player->IsConnected() || player->IsBot())
 	{
-		ConMsg("%s\n", buf);
+		ConMsg("%s\n", StripUnprintable(buf, len).c_str());
 		return;
 	}
 

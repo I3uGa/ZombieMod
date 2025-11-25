@@ -1782,8 +1782,6 @@ void ZR_EndRoundAndAddTeamScore(int iTeamNum)
 	}
 }
 
-static bool g_pOnLadder[MAXPLAYERS + 1] = {false};
-
 void ZR_CheckForLadderExits()
 {
 	for (int i = 0; i < MAXPLAYERS; i++)
@@ -1802,9 +1800,10 @@ void ZR_CheckForLadderExits()
 		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pTarget->GetPawn();
 		auto movetype = pPawn->m_MoveType();
 
-		if (g_pOnLadder[i] && movetype != MOVETYPE_LADDER)
+		if (pPlayer->GetMoveType() == MOVETYPE_LADDER && movetype != MOVETYPE_LADDER) // They were on ladder and now are not so they have left the ladder so reset gravity.
 			pPawn->SetGravityScale(pPlayer->GetGravity());
-		g_pOnLadder[i] = (movetype == MOVETYPE_LADDER);
+
+		pPlayer->SetMoveType(movetype);
 	}
 }
 

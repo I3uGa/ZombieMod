@@ -199,6 +199,7 @@ public:
 		m_iTeleUsagesHuman = 0;
 		m_iTeleUsagesZombie = 0;
 		m_flGravity = 0.0f;
+		m_hMoveType = MoveType_t::MOVETYPE_NONE;
 	}
 
 	~ZEPlayer()
@@ -259,6 +260,7 @@ public:
 	void UpdateLastInputTime() { m_iLastInputTime = std::time(0); }
 	void SetMaxSpeed(float flMaxSpeed) { m_flMaxSpeed = flMaxSpeed; } // BROKEN ON WINDOWS
 	void SetGravity(float flGravity) { m_flGravity = flGravity; }
+	void SetMoveType(MoveType_t hMoveType) { m_hMoveType = hMoveType; }
 	void CycleButtonWatch();
 	void ReplicateConVar(const char* pszName, const char* pszValue);
 	void SetActiveZRClass(std::shared_ptr<ZRClass> pZRModel) { m_pActiveZRClass = pZRModel; }
@@ -309,6 +311,7 @@ public:
 	float GetSpeedMod() { return m_flSpeedMod; }
 	float GetMaxSpeed() { return m_flMaxSpeed; }
 	float GetGravity() { return m_flGravity; }
+	MoveType_t GetMoveType() { return m_hMoveType; }
 	uint64 GetLastInputs() { return m_iLastInputs; }
 	std::time_t GetLastInputTime() { return m_iLastInputTime; }
 	std::shared_ptr<ZRClass> GetActiveZRClass() { return m_pActiveZRClass; }
@@ -402,6 +405,7 @@ private:
 	int m_iTeleUsagesZombie;
 
 	float m_flGravity;
+	MoveType_t m_hMoveType;
 };
 
 class CPlayerManager
