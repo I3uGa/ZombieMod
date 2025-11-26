@@ -1845,7 +1845,7 @@ int CPlayerManager::GetOnlinePlayerCount(bool bCountBots)
 	return iOnlinePlayers;
 }
 
-CConVar<bool> g_cvarFixLadderGravity("cs2f_fix_ladder_gravity", FCVAR_NONE, "Whether to fix ladders resetting player gravity.", true);
+CConVar<bool> g_cvarFixLadderGravity("cs2f_fix_ladder_gravity", FCVAR_NONE, "Whether to fix ladders resetting player gravity.", false);
 
 void CPlayerManager::CheckForLadderExits()
 {
