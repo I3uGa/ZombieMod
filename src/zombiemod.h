@@ -67,7 +67,6 @@ void ZM_Hook_ClientCommand_JoinTeam(CPlayerSlot slot, const CCommand& args);
 void ZM_Precache(IEntityResourceManifest* pResourceManifest);
 bool ZM_CheckTeamWinConditions(int iTeamNum);
 void ZM_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon* pWeapon);
-void ZM_CheckForLadderExits();
 
 void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const bool* pNewValue, const bool* pOldValue);
 

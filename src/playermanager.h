@@ -460,6 +460,7 @@ public:
 
 	void UpdatePlayerStates();
 	int GetOnlinePlayerCount(bool bCountBots);
+	void CheckForLadderExits();
 
 	STEAM_GAMESERVER_CALLBACK_MANUAL(CPlayerManager, OnValidateAuthTicket, ValidateAuthTicketResponse_t, m_CallbackValidateAuthTicketResponse);
 

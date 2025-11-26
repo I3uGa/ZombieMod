@@ -1082,31 +1082,6 @@ void ZM_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServices* pWeaponSe
 	}
 }
 
-void ZM_CheckForLadderExits()
-{
-	for (int i = 0; i < MAXPLAYERS; i++)
-	{
-		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
-
-		if (!pPlayer)
-			continue;
-
-		auto slot = pPlayer->GetPlayerSlot();
-		CCSPlayerController* pTarget = CCSPlayerController::FromSlot(slot);
-
-		if (!pTarget || !pTarget->m_bPawnIsAlive)
-			continue;
-
-		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pTarget->GetPawn();
-		auto movetype = pPawn->m_MoveType();
-
-		if (pPlayer->GetMoveType() == MOVETYPE_LADDER && movetype != MOVETYPE_LADDER) // They were on ladder and now are not so they have left the ladder so reset gravity.
-			pPawn->SetGravityScale(pPlayer->GetGravity());
-
-		pPlayer->SetMoveType(movetype);
-	}
-}
-
 void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const bool* pNewValue, const bool* pOldValue)
 {
 	const char* message = "Cannot enable ZombieMod and Zombie:Reborn enabled at the same time.\n";
