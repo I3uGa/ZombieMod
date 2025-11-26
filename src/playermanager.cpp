@@ -1854,7 +1854,7 @@ void CPlayerManager::CheckForLadderExits()
 
 	for (int i = 0; i < MAXPLAYERS; i++)
 	{
-		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
+		ZEPlayer* pPlayer = this->GetPlayer(i);
 
 		if (!pPlayer)
 			continue;
