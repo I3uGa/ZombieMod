@@ -979,10 +979,8 @@ void CS2Fixes::Hook_ClientDisconnect(CPlayerSlot slot, ENetworkDisconnectionReas
 
 	if (g_cvarZMEnable.Get())
 	{
-		if (player)
-			ZM_CheckTeamWinConditions(player->m_iTeamNum == CS_TEAM_T ? CS_TEAM_CT : CS_TEAM_T);
-		else if (!ZR_CheckTeamWinConditions(CS_TEAM_T)) // If we cant get team num, just check both
-			ZM_CheckTeamWinConditions(CS_TEAM_CT);
+		if (!ZR_CheckTeamWinConditions(CS_TEAM_T))
+			ZR_CheckTeamWinConditions(CS_TEAM_CT);
 	}
 
 	ZEPlayer* pPlayer = g_playerManager->GetPlayer(slot);
@@ -1142,10 +1140,18 @@ bool CS2Fixes::Hook_OnTakeDamage_Alive(CTakeDamageResult* pDamageResult)
 	CCSPlayerPawn* pPawn = META_IFACEPTR(CCSPlayerPawn);
 
 	if (g_cvarEnableZR.Get() && ZR_Hook_OnTakeDamage_Alive(pDamageResult->m_pOriginatingInfo, pPawn))
+	{
+		pDamageResult->m_bWasDamageSuppressed = true;
+		pDamageResult->m_nDamageDealt = 0;
 		RETURN_META_VALUE(MRES_SUPERCEDE, false);
+	}
 
 	if (g_cvarZMEnable.Get() && ZM_Hook_OnTakeDamage_Alive(pDamageResult->m_pOriginatingInfo, pPawn))
+	{
+		pDamageResult->m_bWasDamageSuppressed = true;
+		pDamageResult->m_nDamageDealt = 0;
 		RETURN_META_VALUE(MRES_SUPERCEDE, false);
+	}
 
 	// This is a shit place to be doing this, but player_death event is too late and there is no pre-hook alternative
 	// Check if this is going to kill the player

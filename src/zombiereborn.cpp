@@ -1798,6 +1798,12 @@ void ZR_PostEventAbstract_SosStartSoundEvent(const uint64* pClients, CNetMessage
 
 CON_COMMAND_CHAT(zsounds, "- Toggle zombie sounds")
 {
+	if (g_cvarZMEnable.Get())
+	{
+		zmsounds_callback(args, player);
+		return;
+	}
+
 	if (!player)
 	{
 		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "You cannot use this command from the server console.");

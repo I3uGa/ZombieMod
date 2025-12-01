@@ -71,6 +71,7 @@ void ZM_PostEventAbstract_SosStartSoundEvent(const uint64* pClients, CNetMessage
 
 void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const bool* pNewValue, const bool* pOldValue);
 
+extern void zmsounds_callback(const CCommand& args, CCSPlayerController* player);
 extern void zmtele_callback(const CCommand& args, CCSPlayerController* player);
 extern void zmclass_callback(const CCommand& args, CCSPlayerController* player);
 extern void zminfect_callback(const CCommand& args, CCSPlayerController* player);
