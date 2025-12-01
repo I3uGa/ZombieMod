@@ -200,6 +200,8 @@ public:
 		m_iTeleUsagesZombie = 0;
 		m_flGravity = 0.0f;
 		m_hMoveType = MoveType_t::MOVETYPE_NONE;
+
+		m_iHitsFromZombies = 0;
 	}
 
 	~ZEPlayer()
@@ -274,6 +276,7 @@ public:
 	void SetEntwatchHudSize(float flSize);
 	void SetHumanTeleUsages(int usages)	{ m_iTeleUsagesHuman = usages; }
 	void SetZombieTeleUsages(int usages) { m_iTeleUsagesZombie = usages; }
+	void SetHitsFromZombies(int hits) { m_iHitsFromZombies = hits; }
 
 	uint64 GetAdminFlags() { return m_iAdminFlags; }
 	int GetAdminImmunity() { return m_iAdminImmunity; }
@@ -327,6 +330,7 @@ public:
 	float GetEntwatchHudSize() { return m_flEntwatchHudSize; }
 	int GetHumanTeleUsages() { return m_iTeleUsagesHuman; }
 	int GetZombieTeleUsages() { return m_iTeleUsagesZombie; }
+	int GetHitsFromZombies() { return m_iHitsFromZombies; }
 
 	void OnSpawn();
 	void OnAuthenticated();
@@ -406,6 +410,8 @@ private:
 
 	float m_flGravity;
 	MoveType_t m_hMoveType;
+
+	int m_iHitsFromZombies;
 };
 
 class CPlayerManager

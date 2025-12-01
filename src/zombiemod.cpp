@@ -98,6 +98,8 @@ CConVar<bool> g_cvarZMUserPresToFile("zm_user_prefs_to_file", FCVAR_NONE, "Wheth
 
 CConVar<bool> g_cvarZMRunWithBots("zm_run_with_bots", FCVAR_NONE, "When true, the server will end rounds as normal when only bots exist in the server.", false);
 
+CConVar<int> g_cvarZMHitsForZombification("zm_hits_for_zombification", FCVAR_NONE, "How many hits for zombification [This setting overrides all others].", 1, true, 1, true, 10);
+
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
 	g_pZRPlayerClassManager->LoadPlayerClass(EZRGameMode::GAMEMODE_ZM);
@@ -142,14 +144,16 @@ void ZM_RespawnAll()
 
 		if (!pController || pController->m_bIsHLTV || (pController->m_iTeamNum() != CS_TEAM_CT && pController->m_iTeamNum() != CS_TEAM_T))
 			continue;
-		pController->Respawn();
 
 		ZEPlayer* pPlayer = pController->GetZEPlayer();
 		if (pPlayer)
 		{
 			pPlayer->SetHumanTeleUsages(0);
 			pPlayer->SetZombieTeleUsages(0);
+			pPlayer->SetHitsFromZombies(0);
 		}
+
+		pController->Respawn();
 
 	}
 }
@@ -247,6 +251,7 @@ void ZM_OnRoundStart(IGameEvent* pEvent)
 		{
 			pPlayer->SetHumanTeleUsages(0);
 			pPlayer->SetZombieTeleUsages(0);
+			pPlayer->SetHitsFromZombies(0);
 		}
 
 		CCSPlayerPawn* pPawn = pController->GetPlayerPawn();
@@ -716,6 +721,32 @@ bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPa
 	const char* pszAbilityClass = pInfo->m_hAbility.Get() ? pInfo->m_hAbility.Get()->GetClassname() : "";
 	if (pAttackerPawn->m_iTeamNum() == CS_TEAM_T && pVictimPawn->m_iTeamNum() == CS_TEAM_CT && !V_strncmp(pszAbilityClass, "weapon_knife", 12))
 	{
+		int times = g_cvarZMHitsForZombification.Get();
+		if (times > 1)
+		{
+			ZEPlayer* pPlayer = pVictimController->GetZEPlayer();
+			if (pPlayer)
+			{
+				int hits = pPlayer->GetHitsFromZombies();
+				hits++;
+				pPlayer->SetHitsFromZombies(hits);
+				if (hits >= times)
+				{
+					ZM_Infect(pAttackerController, pVictimController, false);
+				}
+				else
+				{
+					char msg[256];
+					V_snprintf(msg, sizeof(msg), "You've been cut %d times! %d more time(s) and you're a zombie!", hits, (times - hits));
+					ClientPrint(pVictimController, HUD_PRINTNOTIFY, msg);
+					ClientPrint(pVictimController, HUD_PRINTTALK, msg);
+					ClientPrint(pVictimController, HUD_PRINTCENTER, msg);
+				}
+				return true; // nullify the damage
+			}
+			// if no pPlayer just infect I guess?
+		}
+		
 		ZM_Infect(pAttackerController, pVictimController, false);
 		return true; // nullify the damage
 	}
@@ -829,6 +860,7 @@ void ZM_Hook_ClientPutInServer(CPlayerSlot slot, char const* pszName, int type, 
 	ZEPlayer* pPlayer = pController->GetZEPlayer();
 	if (pPlayer)
 	{
+		pPlayer->SetHitsFromZombies(0);
 		pPlayer->SetHumanTeleUsages(0);
 		pPlayer->SetZombieTeleUsages(0);
 	}
