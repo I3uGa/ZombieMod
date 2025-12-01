@@ -758,69 +758,79 @@ void CS2Fixes::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 		if (g_cvarEnableNoShake.Get())
 			*(uint64*)clients &= ~g_playerManager->GetNoShakeMask();
 	}
-	else if (g_cvarEnableStopSound.Get() && info->m_MessageId == GE_SosStartSoundEvent)
+	else if (info->m_MessageId == GE_SosStartSoundEvent)
 	{
-		static std::set<uint32> soundEventHashes;
 		auto msg = const_cast<CNetMessage*>(pData)->ToPB<CMsgSosStartSoundEvent>();
 
-		ExecuteOnce(
-			soundEventHashes.insert(GetSoundEventHash("Weapon_Knife.HitWall"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_Knife.Slash"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_Knife.Hit"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_Knife.Stab"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_sg556.ZoomIn"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_sg556.ZoomOut"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_AUG.ZoomIn"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_AUG.ZoomOut"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_SSG08.Zoom"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_SSG08.ZoomOut"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_SCAR20.Zoom"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_SCAR20.ZoomOut"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_G3SG1.Zoom"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_G3SG1.ZoomOut"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_AWP.Zoom"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_AWP.ZoomOut"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon_Revolver.Prepare"));
-			soundEventHashes.insert(GetSoundEventHash("Weapon.AutoSemiAutoSwitch")););
+		if (g_cvarEnableZR.Get())
+			ZR_PostEventAbstract_SosStartSoundEvent(clients, msg);
 
-		if (!soundEventHashes.contains(msg->soundevent_hash()))
-			return;
+		if (g_cvarZMEnable.Get())
+			ZM_PostEventAbstract_SosStartSoundEvent(clients, msg);
 
-		uint64 stopSoundMask = g_playerManager->GetStopSoundMask();
-		uint64 silenceSoundMask = g_playerManager->GetSilenceSoundMask();
-
-		if (!msg->has_source_entity_index())
-			return;
-
-		CBaseEntity* pSourceEntity = (CBaseEntity*)g_pEntitySystem->GetEntityInstance(CEntityIndex(msg->source_entity_index()));
-		int playerSlot = -1;
-
-		if (!pSourceEntity)
-			return;
-
-		if (!V_strcasecmp(pSourceEntity->GetClassname(), "player"))
+		if (g_cvarEnableStopSound.Get())
 		{
-			playerSlot = ((CCSPlayerPawn*)pSourceEntity)->GetController()->GetPlayerSlot();
+			static std::set<uint32> soundEventHashes;
+
+			ExecuteOnce(
+				soundEventHashes.insert(GetSoundEventHash("Weapon_Knife.HitWall"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_Knife.Slash"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_Knife.Hit"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_Knife.Stab"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_sg556.ZoomIn"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_sg556.ZoomOut"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_AUG.ZoomIn"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_AUG.ZoomOut"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_SSG08.Zoom"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_SSG08.ZoomOut"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_SCAR20.Zoom"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_SCAR20.ZoomOut"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_G3SG1.Zoom"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_G3SG1.ZoomOut"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_AWP.Zoom"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_AWP.ZoomOut"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon_Revolver.Prepare"));
+				soundEventHashes.insert(GetSoundEventHash("Weapon.AutoSemiAutoSwitch")););
+
+			if (!soundEventHashes.contains(msg->soundevent_hash()))
+				return;
+
+			uint64 stopSoundMask = g_playerManager->GetStopSoundMask();
+			uint64 silenceSoundMask = g_playerManager->GetSilenceSoundMask();
+
+			if (!msg->has_source_entity_index())
+				return;
+
+			CBaseEntity* pSourceEntity = (CBaseEntity*)g_pEntitySystem->GetEntityInstance(CEntityIndex(msg->source_entity_index()));
+			int playerSlot = -1;
+
+			if (!pSourceEntity)
+				return;
+
+			if (!V_strcasecmp(pSourceEntity->GetClassname(), "player"))
+			{
+				playerSlot = ((CCSPlayerPawn*)pSourceEntity)->GetController()->GetPlayerSlot();
+			}
+			else if (!V_strncasecmp(pSourceEntity->GetClassname(), "weapon_", 7))
+			{
+				CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pSourceEntity->m_hOwnerEntity().Get();
+
+				if (pPawn && pPawn->IsPawn())
+					playerSlot = pPawn->GetController()->GetPlayerSlot();
+			}
+
+			// Remove player who triggered this sound from masks
+			// Because some of these sounds never get played locally (Zoom's, Knife Hit/Stab)
+			if (playerSlot != -1 && g_playerManager->IsPlayerUsingStopSound(playerSlot))
+				stopSoundMask &= ~((uint64)1 << playerSlot);
+
+			if (playerSlot != -1 && g_playerManager->IsPlayerUsingSilenceSound(playerSlot))
+				silenceSoundMask &= ~((uint64)1 << playerSlot);
+
+			// Filter out people using stop/silence sound from hearing this sound from other players
+			*(uint64*)clients &= ~stopSoundMask;
+			*(uint64*)clients &= ~silenceSoundMask;
 		}
-		else if (!V_strncasecmp(pSourceEntity->GetClassname(), "weapon_", 7))
-		{
-			CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pSourceEntity->m_hOwnerEntity().Get();
-
-			if (pPawn && pPawn->IsPawn())
-				playerSlot = pPawn->GetController()->GetPlayerSlot();
-		}
-
-		// Remove player who triggered this sound from masks
-		// Because some of these sounds never get played locally (Zoom's, Knife Hit/Stab)
-		if (playerSlot != -1 && g_playerManager->IsPlayerUsingStopSound(playerSlot))
-			stopSoundMask &= ~((uint64)1 << playerSlot);
-
-		if (playerSlot != -1 && g_playerManager->IsPlayerUsingSilenceSound(playerSlot))
-			silenceSoundMask &= ~((uint64)1 << playerSlot);
-
-		// Filter out people using stop/silence sound from hearing this sound from other players
-		*(uint64*)clients &= ~stopSoundMask;
-		*(uint64*)clients &= ~silenceSoundMask;
 	}
 }
 
@@ -962,9 +972,8 @@ void CS2Fixes::Hook_ClientDisconnect(CPlayerSlot slot, ENetworkDisconnectionReas
 	CCSPlayerController* player = CCSPlayerController::FromSlot(slot);
 	if (g_cvarEnableZR.Get())
 	{
-		if (player)
-			ZR_CheckTeamWinConditions(player->m_iTeamNum == CS_TEAM_T ? CS_TEAM_CT : CS_TEAM_T);
-		else if (!ZR_CheckTeamWinConditions(CS_TEAM_T)) // If we cant get team num, just check both
+		// Controller team num is not valid post-disconnect, so just check both teams
+		if (!ZR_CheckTeamWinConditions(CS_TEAM_T))
 			ZR_CheckTeamWinConditions(CS_TEAM_CT);
 	}
 

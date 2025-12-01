@@ -1114,6 +1114,37 @@ void ZM_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServices* pWeaponSe
 	}
 }
 
+void ZM_PostEventAbstract_SosStartSoundEvent(const uint64* pClients, CNetMessagePB<CMsgSosStartSoundEvent>* pMsg)
+{
+	static std::set<uint32> soundEventHashes;
+
+	ExecuteOnce(
+		soundEventHashes.insert(GetSoundEventHash("zr.amb.scream"));
+		soundEventHashes.insert(GetSoundEventHash("zr.amb.zombie_die"));
+		soundEventHashes.insert(GetSoundEventHash("zr.amb.zombie_pain"));
+		soundEventHashes.insert(GetSoundEventHash("zr.amb.zombie_voice_idle")););
+
+	// Filter out people with zsounds disabled from hearing this sound
+	if (soundEventHashes.contains(pMsg->soundevent_hash()))
+		*(uint64*)pClients &= g_playerManager->GetZSoundsMask();
+}
+
+CON_COMMAND_CHAT(zmsounds, "- Toggle zombie sounds")
+{
+	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "You cannot use this command from the server console.");
+		return;
+	}
+
+	int iPlayer = player->GetPlayerSlot();
+	bool bSet = !g_playerManager->IsPlayerUsingZSounds(iPlayer);
+
+	g_playerManager->SetPlayerZSounds(iPlayer, bSet);
+
+	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "You have %s zombie sounds.", bSet ? "enabled" : "disabled");
+}
+
 void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const bool* pNewValue, const bool* pOldValue)
 {
 	const char* message = "Cannot enable ZombieMod and Zombie:Reborn enabled at the same time.\n";

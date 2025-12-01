@@ -1787,6 +1787,22 @@ void CPlayerManager::SetPlayerSilenceSound(int slot, bool set)
 	g_pUserPreferencesSystem->SetPreferenceInt(slot, SOUND_STATUS_PREF_KEY_NAME, iStopPreferenceStatus + iSilencePreferenceStatus);
 }
 
+void CPlayerManager::SetPlayerZSounds(int slot, bool set)
+{
+	if (set)
+		m_nUsingZSounds |= ((uint64)1 << slot);
+	else
+		m_nUsingZSounds &= ~((uint64)1 << slot);
+
+	// Set the user prefs if the player is ingame
+	ZEPlayer* pPlayer = m_vecPlayers[slot];
+	if (!pPlayer) return;
+
+	uint64 iSlotMask = (uint64)1 << slot;
+	int iZSoundsPreferenceStatus = (m_nUsingZSounds & iSlotMask) ? 1 : 0;
+	g_pUserPreferencesSystem->SetPreferenceInt(slot, ZSOUNDS_PREF_KEY_NAME, iZSoundsPreferenceStatus);
+}
+
 void CPlayerManager::SetPlayerStopDecals(int slot, bool set)
 {
 	if (set)
@@ -1823,6 +1839,7 @@ void CPlayerManager::ResetPlayerFlags(int slot)
 {
 	SetPlayerStopSound(slot, true);
 	SetPlayerSilenceSound(slot, false);
+	SetPlayerZSounds(slot, true);
 	SetPlayerStopDecals(slot, true);
 	SetPlayerNoShake(slot, false);
 }
