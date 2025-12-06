@@ -970,6 +970,7 @@ void CS2Fixes::Hook_ClientDisconnect(CPlayerSlot slot, ENetworkDisconnectionReas
 	Message("Hook_ClientDisconnect(%d, %d, \"%s\", %lli)\n", slot, reason, pszName, xuid);
 
 	CCSPlayerController* player = CCSPlayerController::FromSlot(slot);
+
 	if (g_cvarEnableZR.Get())
 	{
 		// Controller team num is not valid post-disconnect, so just check both teams
