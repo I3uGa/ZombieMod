@@ -240,7 +240,10 @@ void ZRClass::Override(ordered_json jsonKeys, std::string szClassname)
 }
 
 ZRHumanClass::ZRHumanClass(ordered_json jsonKeys, std::string szClassname) :
-	ZRClass(jsonKeys, szClassname, CS_TEAM_CT){};
+	ZRClass(jsonKeys, szClassname, CS_TEAM_CT),
+	iArmor(jsonKeys.value("armor", 1)),
+	iArmorRegenCount(jsonKeys.value("armor_regen_count", 1)),
+	flArmorRegenInterval(jsonKeys.value("armor_regen_interval", 5.0)) {};
 
 ZRZombieClass::ZRZombieClass(ordered_json jsonKeys, std::string szClassname) :
 	ZRClass(jsonKeys, szClassname, CS_TEAM_T),
@@ -555,6 +558,9 @@ void CZRPlayerClassManager::ApplyHumanClass(std::shared_ptr<ZRHumanClass> pClass
 			return -1.0f;
 		});
 	}
+
+	if (pController)
+		CreateRegenTimer(pController->GetPlayerSlot(), pPawn->GetHandle(), pClass->flArmorRegenInterval, pClass->iArmorRegenCount);
 }
 
 void CZRPlayerClassManager::ApplyPreferredOrDefaultHumanClass(CCSPlayerPawn* pPawn)
@@ -690,22 +696,60 @@ void CZRPlayerClassManager::GetZRClassList(int iTeam, std::vector<std::shared_pt
 
 void CZRPlayerClassManager::CreateRegenTimer(int iPlayerSlot, CHandle<CCSPlayerPawn> hPawn, float flInterval, int iAmount)
 {
+	if (flInterval <= 0.0f)
+		return;
+
 	// Double check a regen timer isn't somehow already running
 	CancelRegenTimer(iPlayerSlot);
 
-	auto wTimer = CTimer::Create(flInterval, TIMERFLAG_MAP | TIMERFLAG_ROUND, [hPawn, flInterval, iAmount]() {
+	auto wTimer = CTimer::Create(flInterval, TIMERFLAG_MAP | TIMERFLAG_ROUND, [iPlayerSlot, hPawn, flInterval, iAmount]() {
 		CCSPlayerPawn* pPawn = hPawn.Get();
 
 		if (!pPawn || !pPawn->IsAlive())
 			return -1.0f;
 
-		// Do we even need to regen?
-		if (pPawn->m_iHealth() >= pPawn->m_iMaxHealth())
-			return flInterval;
+		if (pPawn->m_iTeamNum == CS_TEAM_CT)
+		{
+			// Armour Regen
+			ZEPlayer* pPlayer = g_playerManager->GetPlayer(iPlayerSlot);
+			if (pPlayer)
+			{
+				std::shared_ptr<ZRClass> activeClass = pPlayer->GetActiveZRClass();
+				auto maxhits = 1;
+				if (activeClass && activeClass->iTeam == CS_TEAM_CT)
+					maxhits = static_pointer_cast<ZRHumanClass>(activeClass)->iArmor;
 
-		int iHealth = pPawn->m_iHealth() + iAmount;
-		pPawn->m_iHealth = pPawn->m_iMaxHealth() < iHealth ? pPawn->m_iMaxHealth() : iHealth;
-		return flInterval;
+				if (maxhits <= 1)
+					return -1.0f;
+
+				auto hits = pPlayer->GetHitsFromZombies();
+				// Do we even need to regen?
+				if (hits <= 0)
+					return flInterval;
+
+				auto pController = pPawn->GetOriginalController();
+
+				char msg[256];
+				V_snprintf(msg, sizeof(msg), "You've been regernated %d hits!", iAmount);
+				ClientPrint(pController, HUD_PRINTNOTIFY, msg);
+				ClientPrint(pController, HUD_PRINTTALK, msg);
+				ClientPrint(pController, HUD_PRINTCENTER, msg);
+
+				auto playerHits = hits - iAmount <= 0 ? 0 : hits - iAmount;
+				pPlayer->SetHitsFromZombies(hits - iAmount);
+				return flInterval;
+			}
+		}
+		else
+		{
+			// Do we even need to regen?
+			if (pPawn->m_iHealth() >= pPawn->m_iMaxHealth())
+				return flInterval;
+
+			int iHealth = pPawn->m_iHealth() + iAmount;
+			pPawn->m_iHealth = pPawn->m_iMaxHealth() < iHealth ? pPawn->m_iMaxHealth() : iHealth;
+			return flInterval;
+		}
 	});
 
 	m_vecRegenTimers[iPlayerSlot] = wTimer;

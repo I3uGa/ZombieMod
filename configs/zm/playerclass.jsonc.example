@@ -8,6 +8,9 @@
 			// player behaviour
 			// all player attributes are required if it doesn't have a base class
 			"health": 100,
+			"armor": 5,
+			"armor_regen_count": 1,
+			"armor_regen_interval": 5.0,
 			"models": [
 				// base class model entries can omit color (defaults to "255 255 255") and skins (defaults to [0])
 				{

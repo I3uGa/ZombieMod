@@ -1147,7 +1147,7 @@ bool CS2Fixes::Hook_OnTakeDamage_Alive(CTakeDamageResult* pDamageResult)
 		RETURN_META_VALUE(MRES_SUPERCEDE, false);
 	}
 
-	if (g_cvarZMEnable.Get() && ZM_Hook_OnTakeDamage_Alive(pDamageResult->m_pOriginatingInfo, pPawn))
+	if (g_cvarZMEnable.Get() && ZM_Hook_OnTakeDamage_Alive(pDamageResult->m_pOriginatingInfo, pPawn, false))
 	{
 		pDamageResult->m_bWasDamageSuppressed = true;
 		pDamageResult->m_nDamageDealt = 0;

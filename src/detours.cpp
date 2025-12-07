@@ -115,6 +115,11 @@ int64 FASTCALL Detour_CBaseEntity_TakeDamageOld(CBaseEntity* pThis, CTakeDamageI
 	if (g_cvarBlockAllDamage.Get() && pThis->IsPawn())
 		return 1;
 
+	if (g_cvarZMEnable.Get() && pThis->IsPawn() && ZM_Hook_OnTakeDamage_Alive(pInfo, reinterpret_cast<CCSPlayerPawn*>(pThis), true))
+	{
+		return 1;
+	}
+
 	CEntityInstance* pInflictor = pInfo->m_hInflictor.Get();
 	const char* pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
 

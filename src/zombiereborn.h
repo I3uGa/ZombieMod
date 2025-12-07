@@ -81,7 +81,7 @@ struct ZRClass
 	float flScale;
 	float flSpeed;
 	float flGravity;
-	uint64 iAdminFlag;
+	uint64 iAdminFlag;	
 	ZRClass(std::shared_ptr<ZRClass> pClass, int iTeam) :
 		iTeam(iTeam),
 		bEnabled(pClass->bEnabled),
@@ -145,9 +145,55 @@ struct ZRClass
 
 struct ZRHumanClass : ZRClass
 {
+	int iArmor;
+	int iArmorRegenCount;
+	float flArmorRegenInterval;
 	ZRHumanClass(std::shared_ptr<ZRHumanClass> pClass) :
-		ZRClass(pClass, CS_TEAM_CT){};
+		ZRClass(pClass, CS_TEAM_T),
+		iArmor(pClass->iArmor),
+		iArmorRegenCount(pClass->iArmorRegenCount),
+		flArmorRegenInterval(pClass->flArmorRegenInterval) {};
 	ZRHumanClass(ordered_json jsonKeys, std::string szClassname);
+	void PrintInfo()
+	{
+		std::string szModels = "";
+		for (const auto& pModel : vecModels)
+		{
+			szModels += "\n\t\t" + pModel->szModelPath;
+			szModels += " Color=\"" + pModel->szColor + "\"";
+			szModels += " Skins=[";
+			for (int i = 0; i < pModel->vecSkins.size(); i++)
+			{
+				szModels += std::to_string(pModel->vecSkins[i]);
+				if (i != pModel->vecSkins.size() - 1)
+					szModels += " ";
+			}
+			szModels += "]";
+		}
+		Message(
+			"%s:\n"
+			"\tenabled: %d\n"
+			"\thealth: %d\n"
+			"\tmodels: %s\n"
+			"\tscale: %f\n"
+			"\tspeed: %f\n"
+			"\tgravity: %f\n"
+			"\tadmin flag: %d\n"
+			"\tarmor: %d\n"
+			"\tarmor_regen_count: %d\n"
+			"\tarmor_regen_interval: %f\n",
+			szClassName.c_str(),
+			bEnabled,
+			iHealth,
+			szModels.c_str(),
+			flScale,
+			flSpeed,
+			flGravity,
+			iAdminFlag,
+			iArmor,
+			iArmorRegenCount,
+			flArmorRegenInterval);
+	};
 };
 
 struct ZRZombieClass : ZRClass

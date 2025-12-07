@@ -43,7 +43,7 @@
 
 #include "tier0/memdbgon.h"
 
-void ZM_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pVictimController, bool bBroadcast);
+void ZM_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pVictimController, bool bDontBroadcast);
 void ZM_Cure(CCSPlayerController* pTargetController);
 void ZM_EndRoundAndAddTeamScore(int iTeamNum);
 void ZM_SetupCTeams();
@@ -97,8 +97,6 @@ CConVar<int> g_cvarZMInfiniteAmmoTotal("zm_infinite_ammo_total", FCVAR_NONE, "Th
 CConVar<bool> g_cvarZMUserPresToFile("zm_user_prefs_to_file", FCVAR_NONE, "Whether to save user prefs to a file if cs2f_user_prefs_api is not set [Folder on server needs to be read/writeable by the game and is game/csgo/addons/cs2fixes/data]", true);
 
 CConVar<bool> g_cvarZMRunWithBots("zm_run_with_bots", FCVAR_NONE, "When true, the server will end rounds as normal when only bots exist in the server.", false);
-
-CConVar<int> g_cvarZMHitsForZombification("zm_hits_for_zombification", FCVAR_NONE, "How many hits for zombification [This setting overrides all others].", 1, true, 1, true, 10);
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
@@ -709,75 +707,90 @@ void ZM_StartInitialCountdown()
 	});
 }
 
-bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPawn)
+bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPawn, bool bNotAlive)
 {
 	CCSPlayerPawn* pAttackerPawn = (CCSPlayerPawn*)pInfo->m_hAttacker.Get();
 
 	if (!(pAttackerPawn && pVictimPawn && pAttackerPawn->IsPawn() && pVictimPawn->IsPawn()))
 		return false;
-
+	
 	CCSPlayerController* pAttackerController = CCSPlayerController::FromPawn(pAttackerPawn);
 	CCSPlayerController* pVictimController = CCSPlayerController::FromPawn(pVictimPawn);
-	const char* pszAbilityClass = pInfo->m_hAbility.Get() ? pInfo->m_hAbility.Get()->GetClassname() : "";
-	if (pAttackerPawn->m_iTeamNum() == CS_TEAM_T && pVictimPawn->m_iTeamNum() == CS_TEAM_CT && !V_strncmp(pszAbilityClass, "weapon_knife", 12))
+
+	if (bNotAlive)
 	{
-		int times = g_cvarZMHitsForZombification.Get();
-		if (times > 1)
+		const char* pszAbilityClass = pInfo->m_hAbility.Get() ? pInfo->m_hAbility.Get()->GetClassname() : "";
+		if (pAttackerPawn->m_iTeamNum() == CS_TEAM_T && pVictimPawn->m_iTeamNum() == CS_TEAM_CT && !V_strncmp(pszAbilityClass, "weapon_knife", 12))
 		{
+			int times = 1;
 			ZEPlayer* pPlayer = pVictimController->GetZEPlayer();
 			if (pPlayer)
 			{
-				int hits = pPlayer->GetHitsFromZombies();
-				hits++;
-				pPlayer->SetHitsFromZombies(hits);
-				if (hits >= times)
+				std::shared_ptr<ZRClass> activeClass = pPlayer->GetActiveZRClass();
+
+				if (activeClass && activeClass->iTeam == CS_TEAM_CT)
+					times = static_pointer_cast<ZRHumanClass>(activeClass)->iArmor;
+
+				if (times > 1)
 				{
-					ZM_Infect(pAttackerController, pVictimController, false);
+					if (pPlayer)
+					{
+						int hits = pPlayer->GetHitsFromZombies();
+						hits++;
+						pPlayer->SetHitsFromZombies(hits);
+						if (hits >= times)
+						{
+							ZM_Infect(pAttackerController, pVictimController, false);
+						}
+						else
+						{
+							char msg[256];
+							V_snprintf(msg, sizeof(msg), "You've been cut %d times! %d more time(s) and you're a zombie!", hits, (times - hits));
+							ClientPrint(pVictimController, HUD_PRINTNOTIFY, msg);
+							ClientPrint(pVictimController, HUD_PRINTTALK, msg);
+							ClientPrint(pVictimController, HUD_PRINTCENTER, msg);
+						}
+						return true; // nullify the damage
+					}
 				}
-				else
-				{
-					char msg[256];
-					V_snprintf(msg, sizeof(msg), "You've been cut %d times! %d more time(s) and you're a zombie!", hits, (times - hits));
-					ClientPrint(pVictimController, HUD_PRINTNOTIFY, msg);
-					ClientPrint(pVictimController, HUD_PRINTTALK, msg);
-					ClientPrint(pVictimController, HUD_PRINTCENTER, msg);
-				}
-				return true; // nullify the damage
+				// if no pPlayer just infect I guess?
 			}
-			// if no pPlayer just infect I guess?
+
+			ZM_Infect(pAttackerController, pVictimController, false);
+			return true; // nullify the damage
 		}
-		
-		ZM_Infect(pAttackerController, pVictimController, false);
-		return true; // nullify the damage
+		return false;
 	}
-
-	if (g_cvarZMGroanChance.Get() && pVictimPawn->m_iTeamNum() == CS_TEAM_T && (rand() % g_cvarZMGroanChance.Get()) == 1)
-		pVictimPawn->EmitSound("zr.amb.zombie_pain");
-
-	// grenade and molotov knockback
-	if (pAttackerPawn->m_iTeamNum() == CS_TEAM_CT && pVictimPawn->m_iTeamNum() == CS_TEAM_T)
+	else
 	{
-		CEntityInstance* pInflictor = pInfo->m_hInflictor.Get();
-		const char* pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
-		// inflictor class from grenade damage is actually hegrenade_projectile
-		bool bGrenade = V_strncmp(pszInflictorClass, "hegrenade", 9) == 0;
-		bool bInferno = V_strncmp(pszInflictorClass, "inferno", 7) == 0;
+		if (g_cvarZMGroanChance.Get() && pVictimPawn->m_iTeamNum() == CS_TEAM_T && (rand() % g_cvarZMGroanChance.Get()) == 1)
+			pVictimPawn->EmitSound("zr.amb.zombie_pain");
 
-		if (g_cvarZMNapalmGrenades.Get() && bGrenade)
+		// grenade and molotov knockback
+		if (pAttackerPawn->m_iTeamNum() == CS_TEAM_CT && pVictimPawn->m_iTeamNum() == CS_TEAM_T)
 		{
-			// Scale burn duration by damage, so nades from farther away burn zombies for less time
-			float flDuration = (pInfo->m_flDamage / g_cvarZMNapalmFullDamage.Get()) * g_cvarZMNapalmDuration.Get();
-			flDuration = clamp(flDuration, 0.0f, g_cvarZMNapalmDuration.Get());
+			CEntityInstance* pInflictor = pInfo->m_hInflictor.Get();
+			const char* pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
+			// inflictor class from grenade damage is actually hegrenade_projectile
+			bool bGrenade = V_strncmp(pszInflictorClass, "hegrenade", 9) == 0;
+			bool bInferno = V_strncmp(pszInflictorClass, "inferno", 7) == 0;
 
-			// Can't use the same inflictor here as it'll end up calling this again each burn damage tick
-			// DMG_BURN makes loud noises so use DMG_FALL instead which is completely silent
-			IgnitePawn(pVictimPawn, flDuration, pAttackerPawn, pAttackerPawn, nullptr, DMG_FALL);
+			if (g_cvarZMNapalmGrenades.Get() && bGrenade)
+			{
+				// Scale burn duration by damage, so nades from farther away burn zombies for less time
+				float flDuration = (pInfo->m_flDamage / g_cvarZMNapalmFullDamage.Get()) * g_cvarZMNapalmDuration.Get();
+				flDuration = clamp(flDuration, 0.0f, g_cvarZMNapalmDuration.Get());
+
+				// Can't use the same inflictor here as it'll end up calling this again each burn damage tick
+				// DMG_BURN makes loud noises so use DMG_FALL instead which is completely silent
+				IgnitePawn(pVictimPawn, flDuration, pAttackerPawn, pAttackerPawn, nullptr, DMG_FALL);
+			}
+
+			if (bGrenade || bInferno)
+				ZM_ApplyKnockbackExplosion((CBaseEntity*)pInflictor, (CCSPlayerPawn*)pVictimPawn, (int)pInfo->m_flDamage, bInferno);
 		}
-
-		if (bGrenade || bInferno)
-			ZM_ApplyKnockbackExplosion((CBaseEntity*)pInflictor, (CCSPlayerPawn*)pVictimPawn, (int)pInfo->m_flDamage, bInferno);
+		return false;
 	}
-	return false;
 }
 
 // can prevent purchasing and picking it up
