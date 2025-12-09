@@ -722,6 +722,8 @@ bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPa
 		const char* pszAbilityClass = pInfo->m_hAbility.Get() ? pInfo->m_hAbility.Get()->GetClassname() : "";
 		if (pAttackerPawn->m_iTeamNum() == CS_TEAM_T && pVictimPawn->m_iTeamNum() == CS_TEAM_CT && !V_strncmp(pszAbilityClass, "weapon_knife", 12))
 		{
+			char msg[256];
+
 			int times = 1;
 			ZEPlayer* pPlayer = pVictimController->GetZEPlayer();
 			if (pPlayer)
@@ -733,28 +735,32 @@ bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPa
 
 				if (times > 1)
 				{
-					if (pPlayer)
+					int hits = pPlayer->GetHitsFromZombies();
+					hits++;
+					pPlayer->SetHitsFromZombies(hits);
+					if (hits >= times)
 					{
-						int hits = pPlayer->GetHitsFromZombies();
-						hits++;
-						pPlayer->SetHitsFromZombies(hits);
-						char msg[256];
-						if (hits >= times)
-						{
-							ZM_Infect(pAttackerController, pVictimController, false);
-							V_snprintf(msg, sizeof(msg), "You've been cut %d times! There are %d more time(s). Now you're a zombie!", hits, (times - hits));
-						}
-						else
-						{
-							V_snprintf(msg, sizeof(msg), "You've been cut %d times! %d more time(s) and you're a zombie!", hits, (times - hits));
-						}
-						ClientPrint(pVictimController, HUD_PRINTNOTIFY, msg);
-						ClientPrint(pVictimController, HUD_PRINTTALK, msg);
-						ClientPrint(pVictimController, HUD_PRINTCENTER, msg);
-						return true; // nullify the damage
+						ZM_Infect(pAttackerController, pVictimController, false);
+						V_snprintf(msg, sizeof(msg), "You've been cut %d times! There are %d more time(s). Now you're a zombie!", hits, (times - hits));
 					}
+					else
+					{
+						V_snprintf(msg, sizeof(msg), "You've been cut %d times! %d more time(s) and you're a zombie!", hits, (times - hits));
+					}
+					return true; // nullify the damage
 				}
-				// if no pPlayer just infect I guess?
+				else
+				{
+					V_snprintf(msg, sizeof(msg), "Problem getting human class.");
+				}
+
+				ClientPrint(pVictimController, HUD_PRINTNOTIFY, msg);
+				ClientPrint(pVictimController, HUD_PRINTTALK, msg);
+				ClientPrint(pVictimController, HUD_PRINTCENTER, msg);
+			}
+			else
+			{
+				return true;
 			}
 
 			ZM_Infect(pAttackerController, pVictimController, false);
