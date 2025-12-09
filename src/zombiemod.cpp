@@ -60,7 +60,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0s");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0v");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -733,34 +733,18 @@ bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPa
 				if (activeClass && activeClass->iTeam == CS_TEAM_CT)
 					times = static_pointer_cast<ZRHumanClass>(activeClass)->iArmor;
 
-				if (times > 1)
+				if (times > 1) // If armor is set.
 				{
 					int hits = pPlayer->GetHitsFromZombies();
 					hits++;
 					pPlayer->SetHitsFromZombies(hits);
 					if (hits >= times)
 					{
+						// If hit more times than the armour then zombify
 						ZM_Infect(pAttackerController, pVictimController, false);
-						V_snprintf(msg, sizeof(msg), "You've been cut %d times! There are %d more time(s). Now you're a zombie!", hits, (times - hits));
-					}
-					else
-					{
-						V_snprintf(msg, sizeof(msg), "You've been cut %d times! %d more time(s) and you're a zombie!", hits, (times - hits));
 					}
 					return true; // nullify the damage
 				}
-				else
-				{
-					V_snprintf(msg, sizeof(msg), "Problem getting human class.");
-				}
-
-				ClientPrint(pVictimController, HUD_PRINTNOTIFY, msg);
-				ClientPrint(pVictimController, HUD_PRINTTALK, msg);
-				ClientPrint(pVictimController, HUD_PRINTCENTER, msg);
-			}
-			else
-			{
-				return true;
 			}
 
 			ZM_Infect(pAttackerController, pVictimController, false);

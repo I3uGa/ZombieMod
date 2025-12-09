@@ -149,7 +149,7 @@ struct ZRHumanClass : ZRClass
 	int iArmorRegenCount;
 	float flArmorRegenInterval;
 	ZRHumanClass(std::shared_ptr<ZRHumanClass> pClass) :
-		ZRClass(pClass, CS_TEAM_T),
+		ZRClass(pClass, CS_TEAM_CT),
 		iArmor(pClass->iArmor),
 		iArmorRegenCount(pClass->iArmorRegenCount),
 		flArmorRegenInterval(pClass->flArmorRegenInterval) {};
