@@ -194,6 +194,7 @@ struct ZRHumanClass : ZRClass
 			iArmorRegenCount,
 			flArmorRegenInterval);
 	};
+	void Override(ordered_json jsonKeys, std::string szClassname);
 };
 
 struct ZRZombieClass : ZRClass

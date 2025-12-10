@@ -245,6 +245,17 @@ ZRHumanClass::ZRHumanClass(ordered_json jsonKeys, std::string szClassname) :
 	iArmorRegenCount(jsonKeys.value("armor_regen_count", 1)),
 	flArmorRegenInterval(jsonKeys.value("armor_regen_interval", 5.0)) {};
 
+void ZRHumanClass::Override(ordered_json jsonKeys, std::string szClassname)
+{
+	ZRClass::Override(jsonKeys, szClassname);
+	if (jsonKeys.contains("armor"))
+		iArmor = jsonKeys["armor"].get<int>();
+	if (jsonKeys.contains("armor_regen_count"))
+		iArmorRegenCount = jsonKeys["armor_regen_count"].get<int>();
+	if (jsonKeys.contains("armor_regen_interval"))
+		flArmorRegenInterval = jsonKeys["armor_regen_interval"].get<float>();
+}
+
 ZRZombieClass::ZRZombieClass(ordered_json jsonKeys, std::string szClassname) :
 	ZRClass(jsonKeys, szClassname, CS_TEAM_T),
 	iHealthRegenCount(jsonKeys.value("health_regen_count", 0)),
@@ -729,16 +740,11 @@ void CZRPlayerClassManager::CreateRegenTimer(int iPlayerSlot, CHandle<CCSPlayerP
 
 				auto pController = pPawn->GetOriginalController();
 
-				char msg[256];
-				V_snprintf(msg, sizeof(msg), "You've been regernated %d hits!", iAmount);
-				ClientPrint(pController, HUD_PRINTNOTIFY, msg);
-				ClientPrint(pController, HUD_PRINTTALK, msg);
-				ClientPrint(pController, HUD_PRINTCENTER, msg);
-
 				auto playerHits = hits - iAmount <= 0 ? 0 : hits - iAmount;
 				pPlayer->SetHitsFromZombies(hits - iAmount);
 				return flInterval;
 			}
+			return -1.0f;
 		}
 		else
 		{
