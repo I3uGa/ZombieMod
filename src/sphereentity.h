@@ -3,6 +3,33 @@
 #include "platform.h"
 #include "vector.h"
 #include <vector>
+#include "entity/cbasemodelentity.h"
+#include "entity/globaltypes.h"
+
+class CBeam : public CBaseModelEntity
+{
+public:
+	DECLARE_SCHEMA_CLASS(CBeam)
+
+	SCHEMA_FIELD(float, m_flFrameRate)
+	SCHEMA_FIELD(float, m_flHDRColorScale) // 0 = color, 1 = color temperature
+	SCHEMA_FIELD(float, m_flFireTime)
+	SCHEMA_FIELD(float, m_flDamage) // default 6500
+	SCHEMA_FIELD(int, m_nNumBeamEnts)
+	SCHEMA_FIELD(int, m_nBeamFlags) // Shadowmap size in pixels (512 is a good starting value)
+	SCHEMA_FIELD(float, m_fWidth)
+	SCHEMA_FIELD(float, m_fEndWidth)
+	SCHEMA_FIELD(float, m_fFadeLength)
+	SCHEMA_FIELD(float, m_fHaloScale)  // Falloff over the range
+	SCHEMA_FIELD(float, m_fAmplitude) // Falloff from the source
+	SCHEMA_FIELD(float, m_fStartFrame)
+	SCHEMA_FIELD(float, m_fSpeed)
+	SCHEMA_FIELD(float, m_flFrame)
+	SCHEMA_FIELD(bool, m_bTurnedOff)
+	SCHEMA_FIELD(Vector, m_vecEndPos)
+	SCHEMA_FIELD(int, m_nDissolveType)
+
+};
 
 // Forward declarations to keep compile times down
 class CCSPlayerController;

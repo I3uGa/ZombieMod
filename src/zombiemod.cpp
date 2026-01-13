@@ -61,7 +61,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0y");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0z");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -102,6 +102,7 @@ CConVar<bool> g_cvarZMRunWithBots("zm_run_with_bots", FCVAR_NONE, "When true, th
 CConVar<bool> g_cvarZMFreezeGrenades("zm_freeze_grenades", FCVAR_NONE, "When enabled, decoy grenades freeze people in the freeze radius.", false);
 CConVar<int> g_cvarZMFreezeRadius("zm_freeze_radius", FCVAR_NONE, "When freeze grenades are enabled, what radius to freeze zombies.", 200, true, 1, true, 1000);
 CConVar<float> g_cvarZMFreezeTime("zm_freeze_time", FCVAR_NONE, "When freeze grenades are enabled, how long to freeze them.", 4.0f, true, 1.0f, true, 60.0f);
+CConVar<bool> g_cvarZMFreezeLaser("zm_freeze_laser_radius", FCVAR_NONE, "When freeze grenades are enabled, whether or not to show the laser around the radius.", true);
 
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
@@ -1168,40 +1169,35 @@ static void ZM_DrawLaserBetween(const std::vector<Vector>& startPos,
 							 const std::vector<Vector>& endPos,
 							 float durationSeconds)
 {
-	/*
 	const size_t count = std::min(startPos.size(), endPos.size());
 
 	for (size_t i = 0; i < count; ++i)
 	{
-		CBeam* beam = CreateEntityByNameBeam();
-		if (!beam)
-			return; // matches your C# behavior: bail out entirely
+		auto* beam = CreateEntityByName<CBeam>("env_beam");
+		CEntityKeyValues* pKeyValues = new CEntityKeyValues();
+		Color col(0, 255, 255);
+		pKeyValues->SetString("rendercolor", "0 255 255");
+		pKeyValues->SetString("width", "3.0");
+		pKeyValues->SetInt("renderamt", 255);
+		pKeyValues->SetInt("HDRColorScale", 3);
+		pKeyValues->SetInt("spawnflags", 1);
+		beam->m_clrRender() = col;
+		beam->m_fWidth() = 3.0f;
+		beam->m_bTurnedOff() = false;
+		beam->m_nBeamFlags() = 512;
+		beam->DispatchSpawn(pKeyValues);
+		beam->Teleport(&startPos[i], nullptr, nullptr);
+		beam->m_vecEndPos() = endPos[i];
 
-		// --- Configure beam (names differ by SDK/wrappers) ---
-		// Equivalent to: beam.Render = Color.Blue; beam.Width = 3.0f;
 
-		// Example patterns you might have:
-		// beam->m_clrRender = Color::Blue();          // or beam->SetRenderColor(...)
-		// beam->m_fWidth = 3.0f;                     // or beam->SetWidth(...)
-
-		beam->SetRenderColor(0, 0, 255, 255); // common helper in many forks
-		beam->SetWidth(3.0f);
-
-		// Start position
-		TeleportEntity(beam, startPos[i], QAngle{0, 0, 0}, Vector{0, 0, 0});
-
-		// End position
-		beam->SetEndPos(endPos[i]); // or beam->m_vecEndPos = endPos[i];
-
-		DispatchSpawnEntity(beam);
-
-		// Remove after duration (capture pointer by value)
-		AddTimer(durationSeconds, [beam]() {
+		CTimer::Create(durationSeconds, TIMERFLAG_MAP | TIMERFLAG_ROUND, [beam]() {
 			if (beam)
-				RemoveEntity(beam); // or UTIL_Remove(beam)
+				addresses::UTIL_Remove(beam); // or UTIL_Remove(beam)
+
+			return -1.0f;
 		});
 	}
-	*/
+	
 }
 
 void ZM_CheckFrozenPlayers()
@@ -1228,22 +1224,21 @@ void ZM_CheckFrozenPlayers()
 void ZM_FreezePlayer(ZEPlayer* pPlayer, CCSPlayerController* pController, bool freeze)
 {
 	auto velocity = pController->m_vecAbsVelocity();
+	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
+	if (!pPawn)
+		return;
+
 	if (freeze)
 	{
 		velocity.x = -999999;
 		velocity.y = -999999;
 		velocity.z = -999999;
 
-		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
-
-		if (pPawn)
-		{
-			pPawn->SetAbsVelocity(velocity);
-			pPawn->m_flFriction(999999.0f);
-			pPawn->SetMoveType(MoveType_t::MOVETYPE_CUSTOM);
-			pPawn->m_bTakesDamage(false);
-			// pPawn->m_flMoveDoneTime = Server.CurrentTime;
-		}
+		pPawn->SetAbsVelocity(velocity);
+		pPawn->m_vecAbsVelocity() = velocity;
+		pPawn->m_flFriction(999999.0f);
+		pPawn->SetMoveType(MoveType_t::MOVETYPE_NONE);
+		pPawn->m_bTakesDamage(false);
 	}
 	else
 	{
@@ -1251,16 +1246,11 @@ void ZM_FreezePlayer(ZEPlayer* pPlayer, CCSPlayerController* pController, bool f
 		velocity.y = 1;
 		velocity.z = 1;
 
-		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
-
-		if (pPawn)
-		{
-			pPawn->SetAbsVelocity(velocity);
-			pPawn->m_flFriction(1.0f);
-			pPawn->SetMoveType(MoveType_t::MOVETYPE_WALK);
-			pPawn->m_bTakesDamage(true);
-			// pPawn->m_flMoveDoneTime = Server.CurrentTime;
-		}
+		pPawn->SetAbsVelocity(velocity);
+		pPawn->m_vecAbsVelocity() = velocity;
+		pPawn->m_flFriction(1.0f);
+		pPawn->SetMoveType(MoveType_t::MOVETYPE_WALK);
+		pPawn->m_bTakesDamage(true);
 	}
 }
 
@@ -1277,8 +1267,10 @@ void ZM_DecoyExploded(IGameEvent* pEvent)
 	Vector vec(x, y, z);
 	SphereEntity sphereEntity(vec, g_cvarZMFreezeRadius.Get());
 
+	if (g_cvarZMFreezeLaser.Get())
+		ZM_DrawLaserBetween(sphereEntity.CircleInnerPoints(), sphereEntity.CircleOuterPoints(), g_cvarZMFreezeTime.Get());
+
 	auto decoy = g_pEntitySystem->GetEntityInstance(pEvent->GetEntityIndex("entityid"));
-	Message("Grenade exploded x: %f - y: %f - z: %f - decoy = %s\n", x, y, z, decoy->GetClassname());
 	addresses::UTIL_Remove(decoy);
 
 
@@ -1301,12 +1293,10 @@ void ZM_DecoyExploded(IGameEvent* pEvent)
 		auto origin = pPawn->GetAbsOrigin();
 		if (sphereEntity.CollidesWithPoint(origin))
 		{
-			Message("Caught player : %s\n", pController->GetPlayerName());
-
 			pPlayer->SetFrozen(true);
 
 			CTimer::Create(g_cvarZMFreezeTime.Get(), TIMERFLAG_MAP | TIMERFLAG_ROUND, [pPlayer, pController]() {
-				if (pPlayer)
+				if (pPlayer && pController)
 				{
 					pPlayer->SetFrozen(false);
 					ZM_FreezePlayer(pPlayer, pController, false);

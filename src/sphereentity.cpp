@@ -1,5 +1,4 @@
 #include "sphereentity.h"
-
 #include <cmath>
 
 SphereEntity::SphereEntity(const Vector& center, int radius) :
