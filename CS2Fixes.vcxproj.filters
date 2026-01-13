@@ -200,6 +200,9 @@
     <ClCompile Include="src\zombiemod.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\sphereentity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\mempatch.h">
@@ -422,6 +425,9 @@
       <Filter>Header Files\cs2_sdk\entity</Filter>
     </ClInclude>
     <ClInclude Include="src\zombiemod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sphereentity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

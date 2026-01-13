@@ -1033,6 +1033,9 @@ void CS2Fixes::Hook_GameFramePost(bool simulating, bool bFirstTick, bool bLastTi
 
 	if (g_playerManager)
 		g_playerManager->CheckForLadderExits();
+
+	if (g_cvarZMEnable.Get())
+		ZM_CheckFrozenPlayers();
 }
 
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount, CBitVec<16384>& unionTransmitEdicts,

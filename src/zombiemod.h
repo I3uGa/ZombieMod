@@ -68,6 +68,9 @@ void ZM_Precache(IEntityResourceManifest* pResourceManifest);
 bool ZM_CheckTeamWinConditions(int iTeamNum);
 void ZM_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon* pWeapon);
 void ZM_PostEventAbstract_SosStartSoundEvent(const uint64* pClients, CNetMessagePB<CMsgSosStartSoundEvent>* pMsg);
+void ZM_DecoyExploded(IGameEvent* pEvent);
+void ZM_CheckFrozenPlayers();
+void ZM_FreezePlayer(ZEPlayer* pPlayer, CCSPlayerController* pController, bool freeze);
 
 void ConVarZMEnableChange(CConVar<bool>* cvar, CSplitScreenSlot nSlot, const bool* pNewValue, const bool* pOldValue);
 

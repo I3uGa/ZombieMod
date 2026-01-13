@@ -346,3 +346,8 @@ GAME_EVENT_F(cs_win_panel_match)
 	if (!g_pMapVoteSystem->IsVoteOngoing())
 		g_pMapVoteSystem->StartVote();
 }
+
+GAME_EVENT_F(decoy_started)
+{
+	ZM_DecoyExploded(pEvent);
+}

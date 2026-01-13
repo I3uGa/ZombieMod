@@ -40,6 +40,7 @@
 #include "vendor/nlohmann/json.hpp"
 #include "zombiemod.h"
 #include <fstream>
+#include "sphereentity.h"
 
 #include "tier0/memdbgon.h"
 
@@ -60,7 +61,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0x");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0y");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -97,6 +98,11 @@ CConVar<int> g_cvarZMInfiniteAmmoTotal("zm_infinite_ammo_total", FCVAR_NONE, "Th
 CConVar<bool> g_cvarZMUserPresToFile("zm_user_prefs_to_file", FCVAR_NONE, "Whether to save user prefs to a file if cs2f_user_prefs_api is not set [Folder on server needs to be read/writeable by the game and is game/csgo/addons/cs2fixes/data]", true);
 
 CConVar<bool> g_cvarZMRunWithBots("zm_run_with_bots", FCVAR_NONE, "When true, the server will end rounds as normal when only bots exist in the server.", false);
+
+CConVar<bool> g_cvarZMFreezeGrenades("zm_freeze_grenades", FCVAR_NONE, "When enabled, decoy grenades freeze people in the freeze radius.", false);
+CConVar<int> g_cvarZMFreezeRadius("zm_freeze_radius", FCVAR_NONE, "When freeze grenades are enabled, what radius to freeze zombies.", 200, true, 1, true, 1000);
+CConVar<float> g_cvarZMFreezeTime("zm_freeze_time", FCVAR_NONE, "When freeze grenades are enabled, how long to freeze them.", 4.0f, true, 1.0f, true, 60.0f);
+
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
@@ -149,6 +155,7 @@ void ZM_RespawnAll()
 			pPlayer->SetHumanTeleUsages(0);
 			pPlayer->SetZombieTeleUsages(0);
 			pPlayer->SetHitsFromZombies(0);
+			pPlayer->SetFrozen(false);
 		}
 
 		pController->Respawn();
@@ -250,6 +257,7 @@ void ZM_OnRoundStart(IGameEvent* pEvent)
 			pPlayer->SetHumanTeleUsages(0);
 			pPlayer->SetZombieTeleUsages(0);
 			pPlayer->SetHitsFromZombies(0);
+			pPlayer->SetFrozen(false);
 		}
 
 		CCSPlayerPawn* pPawn = pController->GetPlayerPawn();
@@ -889,6 +897,7 @@ void ZM_Hook_ClientPutInServer(CPlayerSlot slot, char const* pszName, int type, 
 		pPlayer->SetHitsFromZombies(0);
 		pPlayer->SetHumanTeleUsages(0);
 		pPlayer->SetZombieTeleUsages(0);
+		pPlayer->SetFrozen(false);
 	}
 
 	ZM_SpawnPlayer(pController);
@@ -1153,6 +1162,160 @@ void ZM_PostEventAbstract_SosStartSoundEvent(const uint64* pClients, CNetMessage
 	// Filter out people with zsounds disabled from hearing this sound
 	if (soundEventHashes.contains(pMsg->soundevent_hash()))
 		*(uint64*)pClients &= g_playerManager->GetZSoundsMask();
+}
+
+static void ZM_DrawLaserBetween(const std::vector<Vector>& startPos,
+							 const std::vector<Vector>& endPos,
+							 float durationSeconds)
+{
+	/*
+	const size_t count = std::min(startPos.size(), endPos.size());
+
+	for (size_t i = 0; i < count; ++i)
+	{
+		CBeam* beam = CreateEntityByNameBeam();
+		if (!beam)
+			return; // matches your C# behavior: bail out entirely
+
+		// --- Configure beam (names differ by SDK/wrappers) ---
+		// Equivalent to: beam.Render = Color.Blue; beam.Width = 3.0f;
+
+		// Example patterns you might have:
+		// beam->m_clrRender = Color::Blue();          // or beam->SetRenderColor(...)
+		// beam->m_fWidth = 3.0f;                     // or beam->SetWidth(...)
+
+		beam->SetRenderColor(0, 0, 255, 255); // common helper in many forks
+		beam->SetWidth(3.0f);
+
+		// Start position
+		TeleportEntity(beam, startPos[i], QAngle{0, 0, 0}, Vector{0, 0, 0});
+
+		// End position
+		beam->SetEndPos(endPos[i]); // or beam->m_vecEndPos = endPos[i];
+
+		DispatchSpawnEntity(beam);
+
+		// Remove after duration (capture pointer by value)
+		AddTimer(durationSeconds, [beam]() {
+			if (beam)
+				RemoveEntity(beam); // or UTIL_Remove(beam)
+		});
+	}
+	*/
+}
+
+void ZM_CheckFrozenPlayers()
+{
+	if (!g_cvarZMFreezeGrenades.Get() || g_cvarZMFreezeTime.Get() < 1 || g_cvarZMFreezeRadius.Get() < 1)
+		return;
+
+	for (int i = 0; i < GetGlobals()->maxClients; i++)
+	{
+		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
+		CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
+
+		// If not player, alive or zombie then ignore.
+		if (!pPlayer || !pController || (!pPlayer->IsFakeClient() && !pPlayer->IsConnected()) || !pPlayer->IsInGame() || !pController->IsAlive() || pController->m_iTeamNum() != CS_TEAM_T)
+			continue;
+
+		if (pPlayer->GetFrozen())
+		{
+			ZM_FreezePlayer(pPlayer, pController, true);
+		}
+	}
+}
+
+void ZM_FreezePlayer(ZEPlayer* pPlayer, CCSPlayerController* pController, bool freeze)
+{
+	auto velocity = pController->m_vecAbsVelocity();
+	if (freeze)
+	{
+		velocity.x = -999999;
+		velocity.y = -999999;
+		velocity.z = -999999;
+
+		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
+
+		if (pPawn)
+		{
+			pPawn->SetAbsVelocity(velocity);
+			pPawn->m_flFriction(999999.0f);
+			pPawn->SetMoveType(MoveType_t::MOVETYPE_CUSTOM);
+			pPawn->m_bTakesDamage(false);
+			// pPawn->m_flMoveDoneTime = Server.CurrentTime;
+		}
+	}
+	else
+	{
+		velocity.x = 1;
+		velocity.y = 1;
+		velocity.z = 1;
+
+		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
+
+		if (pPawn)
+		{
+			pPawn->SetAbsVelocity(velocity);
+			pPawn->m_flFriction(1.0f);
+			pPawn->SetMoveType(MoveType_t::MOVETYPE_WALK);
+			pPawn->m_bTakesDamage(true);
+			// pPawn->m_flMoveDoneTime = Server.CurrentTime;
+		}
+	}
+}
+
+void ZM_DecoyExploded(IGameEvent* pEvent)
+{
+	
+	if (!g_cvarZMFreezeGrenades.Get() || g_cvarZMFreezeTime.Get() < 1 || g_cvarZMFreezeRadius.Get() < 1)
+		return;
+
+	float x = pEvent->GetFloat("x");
+	float y = pEvent->GetFloat("y");
+	float z = pEvent->GetFloat("z");
+
+	Vector vec(x, y, z);
+	SphereEntity sphereEntity(vec, g_cvarZMFreezeRadius.Get());
+
+	auto decoy = g_pEntitySystem->GetEntityInstance(pEvent->GetEntityIndex("entityid"));
+	Message("Grenade exploded x: %f - y: %f - z: %f - decoy = %s\n", x, y, z, decoy->GetClassname());
+	addresses::UTIL_Remove(decoy);
+
+
+	for (int i = 0; i < GetGlobals()->maxClients; i++)
+	{
+		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
+		CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
+
+		if (!pPlayer || !pController)
+			continue;
+
+		// If not player, alive or zombie then ignore.
+		if ((!pPlayer->IsFakeClient() && !pPlayer->IsConnected()) || !pPlayer->IsInGame() || !pController->IsAlive() || pController->m_iTeamNum() != CS_TEAM_T)
+			continue;
+
+		auto pPawn = pController->GetPawn();
+		if (!pPawn)
+			continue;
+
+		auto origin = pPawn->GetAbsOrigin();
+		if (sphereEntity.CollidesWithPoint(origin))
+		{
+			Message("Caught player : %s\n", pController->GetPlayerName());
+
+			pPlayer->SetFrozen(true);
+
+			CTimer::Create(g_cvarZMFreezeTime.Get(), TIMERFLAG_MAP | TIMERFLAG_ROUND, [pPlayer, pController]() {
+				if (pPlayer)
+				{
+					pPlayer->SetFrozen(false);
+					ZM_FreezePlayer(pPlayer, pController, false);
+				}
+				return -1.0f;
+			});
+		}
+
+	}
 }
 
 CON_COMMAND_CHAT(zmsounds, "- Toggle zombie sounds")

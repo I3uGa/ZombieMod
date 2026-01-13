@@ -201,8 +201,8 @@ public:
 		m_iTeleUsagesZombie = 0;
 		m_flGravity = 0.0f;
 		m_hMoveType = MoveType_t::MOVETYPE_NONE;
-
 		m_iHitsFromZombies = 0;
+		m_bFrozen = false;
 	}
 
 	~ZEPlayer()
@@ -278,6 +278,7 @@ public:
 	void SetHumanTeleUsages(int usages)	{ m_iTeleUsagesHuman = usages; }
 	void SetZombieTeleUsages(int usages) { m_iTeleUsagesZombie = usages; }
 	void SetHitsFromZombies(int hits) { m_iHitsFromZombies = hits; }
+	void SetFrozen(bool frozen) { m_bFrozen = frozen; }
 
 	uint64 GetAdminFlags() { return m_iAdminFlags; }
 	int GetAdminImmunity() { return m_iAdminImmunity; }
@@ -332,6 +333,7 @@ public:
 	int GetHumanTeleUsages() { return m_iTeleUsagesHuman; }
 	int GetZombieTeleUsages() { return m_iTeleUsagesZombie; }
 	int GetHitsFromZombies() { return m_iHitsFromZombies; }
+	bool GetFrozen() { return m_bFrozen; }
 
 	void OnSpawn();
 	void OnAuthenticated();
@@ -413,6 +415,8 @@ private:
 	MoveType_t m_hMoveType;
 
 	int m_iHitsFromZombies;
+
+	bool m_bFrozen;
 };
 
 class CPlayerManager
