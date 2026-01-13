@@ -202,11 +202,13 @@ struct ZRZombieClass : ZRClass
 	int iHealthRegenCount;
 	float flHealthRegenInterval;
 	float flKnockback;
+	int iHealthOnZombification;
 	ZRZombieClass(std::shared_ptr<ZRZombieClass> pClass) :
 		ZRClass(pClass, CS_TEAM_T),
 		iHealthRegenCount(pClass->iHealthRegenCount),
 		flHealthRegenInterval(pClass->flHealthRegenInterval),
-		flKnockback(pClass->flKnockback){};
+		flKnockback(pClass->flKnockback),
+		iHealthOnZombification(pClass->iHealthOnZombification) {};
 	ZRZombieClass(ordered_json jsonKeys, std::string szClassname);
 	void PrintInfo()
 	{
@@ -235,7 +237,8 @@ struct ZRZombieClass : ZRClass
 			"\tknockback: %f\n"
 			"\tadmin flag: %d\n"
 			"\thealth_regen_count: %d\n"
-			"\thealth_regen_interval: %f\n",
+			"\thealth_regen_interval: %f\n"
+			"\thealth_on_zombification: %d\n",
 			szClassName.c_str(),
 			bEnabled,
 			iHealth,
@@ -246,7 +249,8 @@ struct ZRZombieClass : ZRClass
 			flKnockback,
 			iAdminFlag,
 			iHealthRegenCount,
-			flHealthRegenInterval);
+			flHealthRegenInterval,
+			iHealthOnZombification);
 	};
 	void Override(ordered_json jsonKeys, std::string szClassname);
 };

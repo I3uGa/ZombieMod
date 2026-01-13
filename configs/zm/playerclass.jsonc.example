@@ -78,7 +78,8 @@
 			"knockback": 1.0,
 			"admin_flag": "",
 			"health_regen_count": 250,
-			"health_regen_interval": 5.0
+			"health_regen_interval": 5.0,
+			"health_on_zombification": 100
 		},
 		// special class that the first batch of zombie will be assigned to
 		"MotherZombie": {

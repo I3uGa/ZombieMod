@@ -271,6 +271,8 @@ void ZRZombieClass::Override(ordered_json jsonKeys, std::string szClassname)
 		flHealthRegenInterval = jsonKeys["health_regen_interval"].get<float>();
 	if (jsonKeys.contains("knockback"))
 		flKnockback = jsonKeys["knockback"].get<float>();
+	if (jsonKeys.contains("health_on_zombification"))
+		iHealthOnZombification = jsonKeys["health_on_zombification"].get<int>();
 }
 
 bool ZRClass::IsApplicableTo(CCSPlayerController* pController)

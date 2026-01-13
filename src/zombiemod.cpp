@@ -60,7 +60,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0v");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.0x");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -97,7 +97,6 @@ CConVar<int> g_cvarZMInfiniteAmmoTotal("zm_infinite_ammo_total", FCVAR_NONE, "Th
 CConVar<bool> g_cvarZMUserPresToFile("zm_user_prefs_to_file", FCVAR_NONE, "Whether to save user prefs to a file if cs2f_user_prefs_api is not set [Folder on server needs to be read/writeable by the game and is game/csgo/addons/cs2fixes/data]", true);
 
 CConVar<bool> g_cvarZMRunWithBots("zm_run_with_bots", FCVAR_NONE, "When true, the server will end rounds as normal when only bots exist in the server.", false);
-CConVar<int> g_cvarZMHealthOnZombification("zm_health_on_zombification", FCVAR_NONE, "When greater than 0, zombies get this much health back when they turn someone else into a zombie.", 0, true, 0, true, 1000);
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
 {
@@ -490,17 +489,25 @@ void ZM_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 	if (!pVictimPawn)
 		return;
 
-	int health = g_cvarZMHealthOnZombification.Get();
-	if (health > 0)
+	ZEPlayer* pAttacker = pAttackerController->GetZEPlayer();
+	if (pAttacker)
 	{
-		CCSPlayerPawn* pAttackerPawn = (CCSPlayerPawn*)pAttackerController->GetPawn();
-		if (!pAttackerPawn)
-			return;
+		int health = 0;
+		std::shared_ptr<ZRClass> activeClass = pAttacker->GetActiveZRClass();
+		if (activeClass && activeClass->iTeam == CS_TEAM_T)
+			health = static_pointer_cast<ZRZombieClass>(activeClass)->iHealthOnZombification;
 
-		if (pAttackerPawn->m_iHealth() < pAttackerPawn->m_iMaxHealth())
+		if (health > 0)
 		{
-			int iHealth = pAttackerPawn->m_iHealth() + health;
-			pAttackerPawn->m_iHealth = pAttackerPawn->m_iMaxHealth() < iHealth ? pAttackerPawn->m_iMaxHealth() : iHealth;
+			CCSPlayerPawn* pAttackerPawn = (CCSPlayerPawn*)pAttackerController->GetPawn();
+			if (!pAttackerPawn)
+				return;
+
+			if (pAttackerPawn->m_iHealth() < pAttackerPawn->m_iMaxHealth())
+			{
+				int iHealth = pAttackerPawn->m_iHealth() + health;
+				pAttackerPawn->m_iHealth = pAttackerPawn->m_iMaxHealth() < iHealth ? pAttackerPawn->m_iMaxHealth() : iHealth;
+			}
 		}
 	}
 
