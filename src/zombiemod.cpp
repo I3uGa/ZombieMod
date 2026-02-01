@@ -466,14 +466,24 @@ std::vector<SpawnPoint*> ZM_GetSpawns()
 	if (!g_pGameRules)
 		return spawns;
 
-	CUtlVector<SpawnPoint*>* ctSpawns = g_pGameRules->m_CTSpawnPoints();
-	CUtlVector<SpawnPoint*>* tSpawns = g_pGameRules->m_TerroristSpawnPoints();
+	auto ctSpawns = g_pGameRules->m_CTSpawnPoints();
+	auto tSpawns = g_pGameRules->m_TerroristSpawnPoints();
 
 	FOR_EACH_VEC(*ctSpawns, i)
-	spawns.push_back((*ctSpawns)[i]);
+	{
+		SpawnPoint* pSpawn = (*ctSpawns)[i].Get();
+
+		if (pSpawn)
+			spawns.push_back(pSpawn);
+	}
 
 	FOR_EACH_VEC(*tSpawns, i)
-	spawns.push_back((*tSpawns)[i]);
+	{
+		SpawnPoint* pSpawn = (*tSpawns)[i].Get();
+
+		if (pSpawn)
+			spawns.push_back(pSpawn);
+	}
 
 	if (!spawns.size())
 		Panic("There are no spawns!\n");
