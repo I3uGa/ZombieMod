@@ -36,7 +36,6 @@ extern CConVar<bool> g_cvarEnableEntwatchHud;
 #define EW_PREFIX " \4[EntWatch]\1 "
 
 #define EW_PREF_HUD_MODE "entwatch_hud"
-#define EW_PREF_CLANTAG "entwatch_clantag"
 #define EW_PREF_HUDPOS_X "entwatch_hudpos_x"
 #define EW_PREF_HUDPOS_Y "entwatch_hudpos_y"
 #define EW_PREF_HUDCOLOR "entwatch_hudcolor"
@@ -206,13 +205,19 @@ struct ETransferInfo
 	float flTime;							// The time when the command was initiated
 };
 
+struct EActiveTransfer
+{
+	CHandle<CCSPlayerController> hReceiver;
+	CHandle<CBasePlayerWeapon> hWeapon;
+	float flTime;
+};
+
 class CEWHandler
 {
 public:
 	CEWHandler()
 	{
 		bConfigLoaded = false;
-		m_bHudTicking = false;
 
 		iBaseBtnUseHookId = -1;
 		iPhysboxUseHookId = -1;
@@ -279,9 +284,10 @@ public:
 	int iRotBtnUseHookId;
 	int iMomRotBtnUseHookId;
 
-	bool m_bHudTicking;
+	std::weak_ptr<CTimer> m_pHudTimer;
 
-	std::map<int, std::shared_ptr<ETransferInfo>> mapTransfers; // Any etransfers that target multiple items
+	std::map<int, std::shared_ptr<ETransferInfo>> mapTransfers;		  // Any etransfers that target multiple items
+	std::vector<std::shared_ptr<EActiveTransfer>> vecActiveTransfers; // Active transfers where only the receiver can pickup the weapon
 };
 
 extern CEWHandler* g_pEWHandler;
@@ -297,7 +303,6 @@ void EW_DropWeapon(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon*
 void EW_PlayerDeath(IGameEvent* pEvent);
 void EW_PlayerDeathPre(CCSPlayerController* pController);
 void EW_PlayerDisconnect(int slot);
-void EW_UpdateClientClanTags();
 bool EW_IsFireOutputHooked();
 void EW_FireOutput(const CEntityIOOutput* pThis, CEntityInstance* pActivator, CEntityInstance* pCaller, const CVariant* value, float flDelay);
 int GetTemplateSuffixNumber(const char* szName);

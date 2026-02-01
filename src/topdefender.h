@@ -19,30 +19,18 @@
 
 #pragma once
 
-#include "platform.h"
-#include "utils.h"
+#include "commands.h"
 
-#define VPROF_LEVEL 1
+#define TD_PREFIX " \4[TopDefender]\1 "
 
-#define CS_TEAM_NONE 0
-#define CS_TEAM_SPECTATOR 1
-#define CS_TEAM_T 2
-#define CS_TEAM_CT 3
+extern CConVar<bool> g_cvarEnableTopDefender;
+extern CConVar<CUtlString> g_cvarTopDefenderChatTag;
+extern CConVar<CUtlString> g_cvarTopDefenderNameColor;
+extern CConVar<CUtlString> g_cvarTopDefenderChatColor;
 
-#define HUD_PRINTNOTIFY 1
-#define HUD_PRINTCONSOLE 2
-#define HUD_PRINTTALK 3
-#define HUD_PRINTCENTER 4
+void TD_OnPlayerHurt(IGameEvent* pEvent);
+void TD_OnPlayerDeath(IGameEvent* pEvent);
+void TD_OnRoundStart(IGameEvent* pEvent);
+void TD_OnRoundEnd(IGameEvent* pEvent);
 
-#define MAXPLAYERS 64
-
-#ifdef _WIN32
-	#define ROOTBIN "/bin/win64/"
-	#define GAMEBIN "/csgo/bin/win64/"
-#else
-	#define ROOTBIN "/bin/linuxsteamrt64/"
-	#define GAMEBIN "/csgo/bin/linuxsteamrt64/"
-#endif
-
-void UnlockConVars();
-void UnlockConCommands();
+void TopDefenderSearch(CCSPlayerController* player, const CCommand& args);

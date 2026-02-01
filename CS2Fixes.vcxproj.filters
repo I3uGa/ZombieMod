@@ -188,6 +188,9 @@
     <ClCompile Include="src\utils\hud_manager.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\utils.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
     <ClCompile Include="src\cs2_sdk\entity\services.cpp">
       <Filter>Source Files\cs2_sdk\entity</Filter>
     </ClCompile>
@@ -201,6 +204,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\sphereentity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\topdefender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -421,6 +427,9 @@
     <ClInclude Include="src\utils\hud_manager.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\utils.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
     <ClInclude Include="src\cs2_sdk\entity\cpointorient.h">
       <Filter>Header Files\cs2_sdk\entity</Filter>
     </ClInclude>
@@ -435,5 +444,8 @@
     <None Include="README.md">
       <Filter>Non Build</Filter>
     </None>
+    <ClInclude Include="src\topdefender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -165,6 +165,7 @@ public:
 		m_bConnected = false;
 		m_iTotalDamage = 0;
 		m_iTotalHits = 0;
+		m_iTotalHeadshots = 0;
 		m_iTotalKills = 0;
 		m_bVotedRTV = false;
 		m_bVotedExtend = false;
@@ -192,7 +193,6 @@ public:
 		m_pActiveZRModel = nullptr;
 		m_iButtonWatchMode = 0;
 		m_iEntwatchHudMode = 0;
-		m_bEntwatchClantags = true;
 		m_colorEntwatchHud = Color(255, 255, 255, 255);
 		m_flEntwatchHudX = -7.5f;
 		m_flEntwatchHudY = -2.0f;
@@ -203,6 +203,7 @@ public:
 		m_hMoveType = MoveType_t::MOVETYPE_NONE;
 		m_iHitsFromZombies = 0;
 		m_bFrozen = false;
+		m_bTopDefender = false;
 	}
 
 	~ZEPlayer()
@@ -237,6 +238,7 @@ public:
 	void SetHideDistance(int distance);
 	void SetTotalDamage(int damage) { m_iTotalDamage = damage; }
 	void SetTotalHits(int hits) { m_iTotalHits = hits; }
+	void SetTotalHeadshots(int headshots) { m_iTotalHeadshots = headshots; }
 	void SetTotalKills(int kills) { m_iTotalKills = kills; }
 	void SetRTVVote(bool bRTVVote) { m_bVotedRTV = bRTVVote; }
 	void SetRTVVoteTime(float flCurtime) { m_flRTVVoteTime = flCurtime; }
@@ -269,7 +271,6 @@ public:
 	void SetActiveZRClass(std::shared_ptr<ZRClass> pZRModel) { m_pActiveZRClass = pZRModel; }
 	void SetActiveZRModel(std::shared_ptr<ZRModelEntry> pZRClass) { m_pActiveZRModel = pZRClass; }
 	void SetEntwatchHudMode(int iMode);
-	void SetEntwatchClangtags(bool bStatus);
 	void SetPointOrient(CPointOrient* pOrient) { m_hPointOrient.Set(pOrient); }
 	void SetEntwatchHud(CPointWorldText* pWorldText) { m_hEntwatchHud.Set(pWorldText); }
 	void SetEntwatchHudColor(Color colorHud);
@@ -279,6 +280,7 @@ public:
 	void SetZombieTeleUsages(int usages) { m_iTeleUsagesZombie = usages; }
 	void SetHitsFromZombies(int hits) { m_iHitsFromZombies = hits; }
 	void SetFrozen(bool frozen) { m_bFrozen = frozen; }
+	void SetTopDefenderStatus(bool bStatus) { m_bTopDefender = bStatus; }
 
 	uint64 GetAdminFlags() { return m_iAdminFlags; }
 	int GetAdminImmunity() { return m_iAdminImmunity; }
@@ -290,6 +292,7 @@ public:
 	CPlayerSlot GetPlayerSlot() { return m_slot; }
 	int GetTotalDamage() { return m_iTotalDamage; }
 	int GetTotalHits() { return m_iTotalHits; }
+	int GetTotalHeadshots() { return m_iTotalHeadshots; }
 	int GetTotalKills() { return m_iTotalKills; }
 	bool GetRTVVote() { return m_bVotedRTV; }
 	float GetRTVVoteTime() { return m_flRTVVoteTime; }
@@ -323,7 +326,6 @@ public:
 	std::shared_ptr<ZRModelEntry> GetActiveZRModel() { return m_pActiveZRModel; }
 	int GetButtonWatchMode();
 	int GetEntwatchHudMode();
-	bool GetEntwatchClangtags() { return m_bEntwatchClantags; }
 	CPointOrient* GetPointOrient() { return m_hPointOrient.Get(); }
 	CPointWorldText* GetEntwatchHud() { return m_hEntwatchHud.Get(); }
 	Color GetEntwatchHudColor() { return m_colorEntwatchHud; }
@@ -334,6 +336,7 @@ public:
 	int GetZombieTeleUsages() { return m_iTeleUsagesZombie; }
 	int GetHitsFromZombies() { return m_iHitsFromZombies; }
 	bool GetFrozen() { return m_bFrozen; }
+	bool GetTopDefenderStatus() { return m_bTopDefender; }
 
 	void OnSpawn();
 	void OnAuthenticated();
@@ -367,6 +370,7 @@ private:
 	CBitVec<MAXPLAYERS> m_shouldTransmit;
 	int m_iTotalDamage;
 	int m_iTotalHits;
+	int m_iTotalHeadshots;
 	int m_iTotalKills;
 	bool m_bVotedRTV;
 	float m_flRTVVoteTime;
@@ -402,7 +406,6 @@ private:
 	CHandle<CPointOrient> m_hPointOrient;
 	CHandle<CPointWorldText> m_hEntwatchHud;
 	int m_iEntwatchHudMode;
-	bool m_bEntwatchClantags;
 	Color m_colorEntwatchHud;
 	float m_flEntwatchHudX;
 	float m_flEntwatchHudY;
@@ -417,6 +420,7 @@ private:
 	int m_iHitsFromZombies;
 
 	bool m_bFrozen;
+	bool m_bTopDefender;
 };
 
 class CPlayerManager
@@ -427,7 +431,7 @@ public:
 		V_memset(m_vecPlayers, 0, sizeof(m_vecPlayers));
 		m_nUsingStopSound = -1; // On by default
 		m_nUsingSilenceSound = 0;
-		m_nUsingZSounds = -1; // On by default
+		m_nUsingZSounds = -1;	 // On by default
 		m_nUsingStopDecals = -1; // On by default
 		m_nUsingNoShake = 0;
 	}
@@ -476,6 +480,7 @@ public:
 	void UpdatePlayerStates();
 	int GetOnlinePlayerCount(bool bCountBots);
 	void CheckForLadderExits();
+	void FullUpdateAllClients();
 
 	STEAM_GAMESERVER_CALLBACK_MANUAL(CPlayerManager, OnValidateAuthTicket, ValidateAuthTicketResponse_t, m_CallbackValidateAuthTicketResponse);
 

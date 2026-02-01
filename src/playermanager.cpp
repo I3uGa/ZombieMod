@@ -717,12 +717,6 @@ void ZEPlayer::SetEntwatchHudMode(int iMode)
 	g_pUserPreferencesSystem->SetPreferenceInt(m_slot.Get(), EW_PREF_HUD_MODE, m_iEntwatchHudMode);
 }
 
-void ZEPlayer::SetEntwatchClangtags(bool bStatus)
-{
-	m_bEntwatchClantags = bStatus;
-	g_pUserPreferencesSystem->SetPreferenceInt(m_slot.Get(), EW_PREF_CLANTAG, bStatus ? 1 : 0);
-}
-
 void ZEPlayer::SetEntwatchHudColor(Color colorHud)
 {
 	m_colorEntwatchHud = colorHud;
@@ -1611,7 +1605,13 @@ ETargetError CPlayerManager::GetPlayersFromString(CCSPlayerController* pPlayer, 
 			if (!pTarget || !pTarget->IsController() || !pTarget->IsConnected() || pTarget->m_bIsHLTV)
 				continue;
 
-			if ((!bExactName && V_stristr(pTarget->GetPlayerName(), pszTarget)) || !V_strcmp(pTarget->GetPlayerName(), pszTarget))
+			std::string strName = pTarget->GetPlayerName();
+
+			// Ignore space that might be added by clan tag name swap trick
+			if (!strName.empty() && strName.back() == ' ')
+				strName.pop_back();
+
+			if ((!bExactName && V_stristr(strName.c_str(), pszTarget)) || !V_strcmp(strName.c_str(), pszTarget))
 			{
 				nType = ETargetType::PLAYER;
 				if (iNumClients == 1)
@@ -1893,4 +1893,15 @@ void CPlayerManager::CheckForLadderExits()
 
 		pPlayer->SetMoveType(movetype);
 	}
+}
+
+void CPlayerManager::FullUpdateAllClients()
+{
+	auto pClients = GetClientList();
+
+	if (!pClients)
+		return;
+
+	FOR_EACH_VEC(*pClients, i)
+	(*pClients)[i]->ForceFullUpdate();
 }
