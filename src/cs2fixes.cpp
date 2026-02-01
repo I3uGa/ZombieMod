@@ -45,6 +45,7 @@
 #include "interface.h"
 #include "leader.h"
 #include "map_votes.h"
+#include "mapmigrations.h"
 #include "networkstringtabledefs.h"
 #include "panoramavote.h"
 #include "patches.h"
@@ -357,6 +358,7 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool
 	g_pIdleSystem = new CIdleSystem();
 	g_pPanoramaVoteHandler = new CPanoramaVoteHandler();
 	g_pEWHandler = new CEWHandler();
+	g_pMapMigrations = new CMapMigrations();
 
 	RegisterWeaponCommands();
 
@@ -506,6 +508,9 @@ bool CS2Fixes::Unload(char* error, size_t maxlen)
 		g_pEWHandler->RemoveAllTriggers();
 		delete g_pEWHandler;
 	}
+
+	if (g_pMapMigrations)
+		delete g_pMapMigrations;
 
 	return true;
 }
@@ -720,7 +725,7 @@ void CS2Fixes::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 		*(uint64*)clients &= ~g_playerManager->GetStopSoundMask();
 		*(uint64*)clients &= ~g_playerManager->GetSilenceSoundMask();
 	}
-	else if (info->m_MessageId == TE_WorldDecalId)
+	else if (info->m_MessageId == GE_PlaceDecalEvent)
 	{
 		*(uint64*)clients &= ~g_playerManager->GetStopDecalsMask();
 	}
@@ -788,7 +793,7 @@ void CS2Fixes::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 			if (!pSourceEntity)
 				return;
 
-			if (!V_strcasecmp(pSourceEntity->GetClassname(), "player"))
+			if (pSourceEntity->IsPawn() && ((CCSPlayerPawn*)pSourceEntity)->GetController())
 			{
 				playerSlot = ((CCSPlayerPawn*)pSourceEntity)->GetController()->GetPlayerSlot();
 			}
@@ -796,7 +801,7 @@ void CS2Fixes::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 			{
 				CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pSourceEntity->m_hOwnerEntity().Get();
 
-				if (pPawn && pPawn->IsPawn())
+				if (pPawn && pPawn->IsPawn() && pPawn->GetController())
 					playerSlot = pPawn->GetController()->GetPlayerSlot();
 			}
 
@@ -1061,6 +1066,7 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount
 void CS2Fixes::Hook_ApplyGameSettings(KeyValues* pKV)
 {
 	g_pMapVoteSystem->ApplyGameSettings(pKV);
+	g_pMapMigrations->ApplyGameSettings(pKV);
 }
 
 void CS2Fixes::Hook_CreateWorkshopMapGroup(const char* name, const CUtlStringList& mapList)
