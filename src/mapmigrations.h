@@ -55,7 +55,7 @@ public:
 	void RemoveWorkshopDetailsQuery(std::shared_ptr<CMapMigrationWorkshopDetailsQuery> pQuery) { m_vecWorkshopDetailsQueries.erase(std::remove(m_vecWorkshopDetailsQueries.begin(), m_vecWorkshopDetailsQueries.end(), pQuery), m_vecWorkshopDetailsQueries.end()); }
 
 private:
-	time_t m_timeMapUpdated = std::numeric_limits<time_t>::max();
+	time_t m_timeMapUpdated = (std::numeric_limits<time_t>::max)();
 	std::vector<std::shared_ptr<CMapMigrationWorkshopDetailsQuery>> m_vecWorkshopDetailsQueries;
 };
 
