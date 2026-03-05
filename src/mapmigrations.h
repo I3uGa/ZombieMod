@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023-2025 Source2ZE
+ * Copyright (C) 2023-2026 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -21,11 +21,15 @@
 
 #include "KeyValues.h"
 #include "convar.h"
+#include "ehandle.h"
 #include "entitysystem.h"
 #include "steam/isteamugc.h"
 #include <vector>
+#undef max
 
 extern CConVar<int> g_cvarMapMigrations20260121;
+
+#define SF_DOOR_ONEWAY 16
 
 class CMapMigrationWorkshopDetailsQuery : public std::enable_shared_from_this<CMapMigrationWorkshopDetailsQuery>
 {
@@ -48,15 +52,18 @@ class CMapMigrations
 {
 public:
 	void ApplyGameSettings(KeyValues* pKV);
-	void OnEntitySpawned(CEntityInstance* pEntity);
-	void Migration_20260121(CEntityInstance* pEntity);
+	void OnRoundPrestart();
+	void OnEntitySpawned(CEntityInstance* pEntity, const CEntityKeyValues* pKeyValues);
+	void RunMigrations(CBaseEntity* pEntity);
+	void Migrations_20260121(CBaseEntity* pEntity);
 	void UpdateMapUpdateTime(time_t timeMapUpdated);
 	void AddWorkshopDetailsQuery(std::shared_ptr<CMapMigrationWorkshopDetailsQuery> pQuery) { m_vecWorkshopDetailsQueries.push_back(pQuery); }
 	void RemoveWorkshopDetailsQuery(std::shared_ptr<CMapMigrationWorkshopDetailsQuery> pQuery) { m_vecWorkshopDetailsQueries.erase(std::remove(m_vecWorkshopDetailsQueries.begin(), m_vecWorkshopDetailsQueries.end(), pQuery), m_vecWorkshopDetailsQueries.end()); }
 
 private:
-	time_t m_timeMapUpdated = (std::numeric_limits<time_t>::max)();
+	time_t m_timeMapUpdated = std::numeric_limits<time_t>::max();
 	std::vector<std::shared_ptr<CMapMigrationWorkshopDetailsQuery>> m_vecWorkshopDetailsQueries;
+	std::vector<CHandle<CBaseEntity>> m_vecModelEntitiesUsingRendermodeEnum;
 };
 
 extern CMapMigrations* g_pMapMigrations;
