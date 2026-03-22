@@ -46,7 +46,8 @@
 
 void ZM_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pVictimController, bool bDontBroadcast);
 void ZM_Cure(CCSPlayerController* pTargetController);
-void ZM_EndRoundAndAddTeamScore(int iTeamNum);
+void ZM_EndRound(int iTeamNum);
+void ZM_FinishRound(int iTeamNum);
 void ZM_SetupCTeams();
 bool ZM_IsTeamAlive(int iTeamNum);
 
@@ -61,7 +62,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.7");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.8");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -847,17 +848,54 @@ AcquireResult ZM_Detour_CCSPlayer_ItemServices_CanAcquire(CCSPlayer_ItemServices
 	return AcquireResult::Allowed;
 }
 
-void ZM_Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
+bool ZM_Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
 {
+	const char* inputName = pInputName->String();
+
+	if (!V_strcasecmp(pThis->GetClassname(), "info_map_parameters") && !V_strcasecmp(inputName, "FireWinCondition"))
+	{
+		switch (value->Get<int>())
+		{
+			case CSRoundEndReason::TargetBombed:
+			case CSRoundEndReason::VIPKilled:
+			case CSRoundEndReason::TerroristsEscaped:
+			case CSRoundEndReason::TerroristWin:
+			case CSRoundEndReason::HostagesNotRescued:
+			case CSRoundEndReason::VIPNotEscaped:
+			case CSRoundEndReason::CTSurrender:
+			case CSRoundEndReason::TerroristsPlanted:
+				ZM_FinishRound(CS_TEAM_T);
+				return true;
+			case CSRoundEndReason::VIPEscaped:
+			case CSRoundEndReason::CTStoppedEscape:
+			case CSRoundEndReason::TerroristsStopped:
+			case CSRoundEndReason::BombDefused:
+			case CSRoundEndReason::CTWin:
+			case CSRoundEndReason::HostagesRescued:
+			case CSRoundEndReason::TargetSaved:
+			case CSRoundEndReason::TerroristsNotEscaped:
+			case CSRoundEndReason::TerroristsSurrender:
+			case CSRoundEndReason::CTsReachedHostage:
+				ZM_FinishRound(CS_TEAM_CT);
+				return true;
+			// This would allow maps to mess with timeleft, so we're actually just going to block it entirely
+			case CSRoundEndReason::GameStart:
+				return false;
+			case CSRoundEndReason::Draw:
+			default:
+				ZM_FinishRound(CS_TEAM_NONE);
+				return true;
+		}
+	}
+
 	if (!g_hRespawnToggler.IsValid())
-		return;
+		return true;
 
 	CBaseEntity* relay = g_hRespawnToggler.Get();
-	const char* inputName = pInputName->String();
 
 	// Must be an input into our zr_toggle_respawn relay
 	if (!relay || pThis != relay->m_pEntity)
-		return;
+		return true;
 
 	if (!V_strcasecmp(inputName, "Trigger"))
 		ZM_ToggleRespawn();
@@ -866,9 +904,10 @@ void ZM_Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLar
 	else if (!V_strcasecmp(inputName, "Disable") && g_bRespawnEnabled)
 		ZM_ToggleRespawn(true, false);
 	else
-		return;
+		return true;
 
-	ClientPrintAll(HUD_PRINTTALK, ZM_PREFIX "Respawning is %s!", g_bRespawnEnabled ? "enabled" : "disabled");
+	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "Respawning is %s!", g_bRespawnEnabled ? "enabled" : "disabled");
+	return true;
 }
 
 void ZM_SpawnPlayer(CCSPlayerController* pController)
@@ -1020,7 +1059,7 @@ void ZM_OnRoundTimeWarning(IGameEvent* pEvent)
 	CTimer::Create(10.0, TIMERFLAG_MAP | TIMERFLAG_ROUND, []() {
 		if (g_ZMRoundState == EZMRoundState::ROUND_END)
 			return -1.0f;
-		ZM_EndRoundAndAddTeamScore(g_cvarZMDefaultWinnerTeam.Get());
+		ZM_EndRound(g_cvarZMDefaultWinnerTeam.Get());
 		return -1.0f;
 	});
 }
@@ -1051,15 +1090,12 @@ bool ZM_CheckTeamWinConditions(int iTeamNum)
 		return false;
 
 	// allow the team to win
-	ZM_EndRoundAndAddTeamScore(iTeamNum);
+	ZM_EndRound(iTeamNum);
 
 	return true;
 }
 
-// spectator: draw
-// t: t win, add t score
-// ct: ct win, add ct score
-void ZM_EndRoundAndAddTeamScore(int iTeamNum)
+void ZM_EndRound(int iTeamNum)
 {
 	bool bServerIdle = true;
 
@@ -1094,15 +1130,14 @@ void ZM_EndRoundAndAddTeamScore(int iTeamNum)
 	CSRoundEndReason iReason;
 	switch (iTeamNum)
 	{
-		default:
-		case CS_TEAM_SPECTATOR:
-			iReason = CSRoundEndReason::Draw;
-			break;
 		case CS_TEAM_T:
 			iReason = CSRoundEndReason::TerroristWin;
 			break;
 		case CS_TEAM_CT:
 			iReason = CSRoundEndReason::CTWin;
+			break;
+		default:
+			iReason = CSRoundEndReason::Draw;
 			break;
 	}
 
@@ -1110,6 +1145,11 @@ void ZM_EndRoundAndAddTeamScore(int iTeamNum)
 	float flRestartDelay = mp_round_restart_delay.GetFloat();
 
 	g_pGameRules->TerminateRound(flRestartDelay, iReason);
+	ZM_FinishRound(iTeamNum);
+}
+
+void ZM_FinishRound(int iTeamNum)
+{
 	g_ZMRoundState = EZMRoundState::ROUND_END;
 	ZM_ToggleRespawn(true, false);
 
