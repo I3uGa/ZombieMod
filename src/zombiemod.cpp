@@ -62,7 +62,7 @@ extern ZRWeaponConfig* g_pZRWeaponConfig;
 extern ZRHitgroupConfig* g_pZRHitgroupConfig;
 
 CConVar<bool> g_cvarZMEnable("zm_enable", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod enabled or not.", false, ConVarZMEnableChange);
-CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.8");
+CConVar<CUtlString> g_cvarZMVersion("zm_version", (FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY), "ZombieMod version", "4.0.9");
 CConVar<CUtlString> g_cvarZMHumanWinOverlayParticle("zm_human_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when human win", "");
 CConVar<CUtlString> g_cvarZMZombieWinOverlayParticle("zm_zombie_win_overlay_particle", FCVAR_NONE, "Screenspace particle to display when zombie win", "");
 CConVar<int> g_cvarZMInfectSpawnType("zm_infect_spawn_type", FCVAR_NONE, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", (int)EZMSpawnType::ZM_RESPAWN, true, 0, true, 1);
@@ -104,6 +104,7 @@ CConVar<bool> g_cvarZMFreezeGrenades("zm_freeze_grenades", FCVAR_NONE, "When ena
 CConVar<int> g_cvarZMFreezeRadius("zm_freeze_radius", FCVAR_NONE, "When freeze grenades are enabled, what radius to freeze zombies.", 200, true, 1, true, 1000);
 CConVar<float> g_cvarZMFreezeTime("zm_freeze_time", FCVAR_NONE, "When freeze grenades are enabled, how long to freeze them.", 4.0f, true, 1.0f, true, 60.0f);
 CConVar<bool> g_cvarZMFreezeLaser("zm_freeze_laser_radius", FCVAR_NONE, "When freeze grenades are enabled, whether or not to show the laser around the radius.", true);
+CConVar<bool> g_cvarZMInfectCountdown("zm_infect_countdown", FCVAR_NONE, "When enabled, displays a message every 5 sections showing remaining time before initial infection.", true);
 
 
 void ZM_Precache(IEntityResourceManifest* pResourceManifest)
@@ -729,7 +730,7 @@ void ZM_StartInitialCountdown()
 			return -1.0f;
 		}
 
-		if (g_iInfectionCountDown <= 60)
+		if (g_cvarZMInfectCountdown.Get() && g_iInfectionCountDown <= 60)
 		{
 			char classicSpawnMsg[256];
 
