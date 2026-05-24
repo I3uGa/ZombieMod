@@ -55,7 +55,7 @@ void ZM_OnLevelInit();
 void ZM_OnRoundPrestart(IGameEvent* pEvent);
 void ZM_OnRoundStart(IGameEvent* pEvent);
 void ZM_OnPlayerSpawn(CCSPlayerController* pController);
-void ZM_OnPlayerTakeDamage(CCSPlayerPawn* pVictimPawn, const CTakeDamageInfo* pInfo, const int32 damage);
+void ZM_OnPlayerTakeDamage(CCSPlayerPawn* pVictimPawn, const CTakeDamageInfo* pInfo, const float damage);
 void ZM_OnPlayerDeath(IGameEvent* pEvent);
 void ZM_OnRoundFreezeEnd(IGameEvent* pEvent);
 void ZM_OnRoundTimeWarning(IGameEvent* pEvent);
