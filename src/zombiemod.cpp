@@ -776,10 +776,12 @@ bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPa
 				if (pVictimPawn->m_ArmorValue() > 0)
     times = 5;
 				if (times > 1) // If armor is set.
-				{
-					int hits = pPlayer->GetHitsFromZombies();
-hits++;
+				int hitAmount = pInfo->m_flDamage() >= 50.0f ? 2 : 1;
+
+int hits = pPlayer->GetHitsFromZombies();
+hits += hitAmount;
 pPlayer->SetHitsFromZombies(hits);
+
 
 int protectedHits = times - 1;
 int armorValue = protectedHits > 0 ? ((protectedHits - hits) * 100 / protectedHits) : 0;
