@@ -786,7 +786,6 @@ int armorValue = protectedHits > 0 ? ((protectedHits - hits) * 100 / protectedHi
 if (armorValue < 0)
     armorValue = 0;
 
-pVictimPawn->m_ArmorValueVariable = armorValue;
 					
 					if (hits >= times)
 					{
