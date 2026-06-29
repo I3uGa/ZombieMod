@@ -773,7 +773,8 @@ bool ZM_Hook_OnTakeDamage_Alive(CTakeDamageInfo* pInfo, CCSPlayerPawn* pVictimPa
 
 				if (activeClass && activeClass->iTeam == CS_TEAM_CT)
 					times = static_pointer_cast<ZRHumanClass>(activeClass)->iArmor;
-
+				if (pVictimPawn->m_ArmorValue() > 0)
+    times = 5;
 				if (times > 1) // If armor is set.
 				{
 					int hits = pPlayer->GetHitsFromZombies();
